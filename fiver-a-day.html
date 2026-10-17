@@ -1,0 +1,657 @@
+<title>Fiver a Day</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Source+Sans+3:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one column notebook, a sticky tab bar, sections that read like a ledger. Money green + pound-coin gold. */
+:root {
+  --bg: #F3F6F4;
+  --surface: #FFFFFF;
+  --ink: #13221E;
+  --muted: #55665F;
+  --line: #D6DFDA;
+  --accent: #0E6B58;
+  --accent-soft: #DCEFE8;
+  --gold: #B07A12;
+  --gold-soft: #F6EBD3;
+  --good: #1F7A45;
+  --bad: #B23A3A;
+  --display: "Bricolage Grotesque", "Avenir Next", "Segoe UI", system-ui, sans-serif;
+  --body: "Source Sans 3", "Segoe UI", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0E1513; --surface: #16201D; --ink: #E3ECE8; --muted: #9BADA6; --line: #2A3833;
+    --accent: #4FC3A6; --accent-soft: #173A32; --gold: #E2B44F; --gold-soft: #3A2F17;
+    --good: #5BCB8A; --bad: #EE7D7D; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0E1513; --surface: #16201D; --ink: #E3ECE8; --muted: #9BADA6; --line: #2A3833;
+  --accent: #4FC3A6; --accent-soft: #173A32; --gold: #E2B44F; --gold-soft: #3A2F17;
+  --good: #5BCB8A; --bad: #EE7D7D; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 17px; line-height: 1.55; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+.wrap { max-width: 860px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+h1, h2, h3 { font-family: var(--display); line-height: 1.15; text-wrap: balance; margin: 0; }
+h1 { font-size: clamp(2.1rem, 6vw, 3.2rem); font-weight: 800; letter-spacing: -0.02em; }
+h2 { font-size: 1.6rem; font-weight: 700; }
+h3 { font-size: 1.15rem; font-weight: 700; }
+p { margin: 0; max-width: 65ch; }
+a { color: var(--accent); }
+.num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.eyebrow { font-family: var(--mono); font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.muted { color: var(--muted); }
+.small { font-size: 0.9rem; }
+
+header.hero { padding-block: 36px 20px; display: grid; gap: 14px; }
+.hero .coin { display: inline-grid; place-items: center; width: 2.2em; height: 2.2em; border-radius: 50%; background: var(--gold-soft); color: var(--gold); font-family: var(--display); font-weight: 800; border: 2px solid var(--gold); font-size: 0.55em; vertical-align: 0.35em; margin-left: 0.2em; }
+.hero p { font-size: 1.1rem; color: var(--muted); }
+.statline { display: flex; flex-wrap: wrap; gap: 8px 24px; padding-top: 6px; }
+.statline div { display: grid; }
+.statline b { font-family: var(--mono); font-size: 1.25rem; font-weight: 500; }
+
+nav.tabs { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); border-bottom: 1px solid var(--line); }
+nav.tabs .wrap { display: flex; gap: 4px; overflow-x: auto; }
+nav.tabs button { font: 600 0.98rem var(--body); background: none; border: 0; color: var(--muted); padding: 12px 14px; border-bottom: 3px solid transparent; cursor: pointer; white-space: nowrap; }
+nav.tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent); }
+nav.tabs button:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+main section { padding-block: 28px 64px; display: grid; gap: 28px; }
+.lede { display: grid; gap: 8px; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 20px; display: grid; gap: 12px; min-width: 0; }
+.callout { background: var(--gold-soft); border-left: 4px solid var(--gold); padding: 14px 16px; border-radius: 0 8px 8px 0; display: grid; gap: 6px; }
+.callout.green { background: var(--accent-soft); border-left-color: var(--accent); }
+
+/* Plan timeline */
+.phases { display: grid; gap: 0; border-left: 2px solid var(--line); margin-left: 8px; }
+.phase { position: relative; padding: 0 0 26px 24px; display: grid; gap: 8px; }
+.phase::before { content: ""; position: absolute; left: -9px; top: 4px; width: 16px; height: 16px; border-radius: 50%; background: var(--bg); border: 3px solid var(--accent); }
+.phase.done::before { background: var(--accent); }
+.phase .when { font-family: var(--mono); font-size: 0.8rem; color: var(--accent); letter-spacing: 0.04em; text-transform: uppercase; }
+.checks { list-style: none; padding: 0; margin: 0; display: grid; gap: 6px; }
+.checks label { display: flex; gap: 10px; align-items: flex-start; cursor: pointer; }
+.checks input { margin-top: 5px; width: 18px; height: 18px; accent-color: var(--accent); flex: none; }
+.checks .done-text { text-decoration: line-through; color: var(--muted); }
+
+.rules { counter-reset: r; list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; }
+.rules li { counter-increment: r; display: grid; grid-template-columns: 2em 1fr; gap: 8px; }
+.rules li::before { content: counter(r); font-family: var(--mono); color: var(--gold); font-weight: 500; }
+
+/* Lessons */
+.progress { display: grid; gap: 6px; }
+.bar { height: 10px; background: var(--line); border-radius: 99px; overflow: hidden; }
+.bar > i { display: block; height: 100%; background: var(--accent); width: 0; transition: width .4s; }
+.lessons { display: grid; gap: 10px; }
+details.lesson { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }
+details.lesson[open] { border-color: var(--accent); }
+details.lesson summary { list-style: none; cursor: pointer; padding: 14px 16px; display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center; }
+details.lesson summary::-webkit-details-marker { display: none; }
+.lnum { font-family: var(--mono); color: var(--muted); font-size: 0.85rem; }
+.ltag { font-family: var(--mono); font-size: 0.72rem; padding: 2px 8px; border-radius: 99px; background: var(--line); color: var(--muted); white-space: nowrap; }
+.ltag.ok { background: var(--accent-soft); color: var(--accent); }
+.lbody { padding: 0 16px 18px; display: grid; gap: 12px; }
+.lbody ul { margin: 0; padding-left: 1.2em; display: grid; gap: 4px; max-width: 65ch; }
+.takeaway { font-weight: 600; border-top: 1px dashed var(--line); padding-top: 10px; }
+.quiz { display: grid; gap: 8px; }
+.quiz .opts { display: grid; gap: 6px; }
+.quiz button { text-align: left; font: inherit; background: var(--bg); border: 1px solid var(--line); color: var(--ink); padding: 8px 12px; border-radius: 8px; cursor: pointer; }
+.quiz button.right { border-color: var(--good); background: var(--accent-soft); }
+.quiz button.wrong { border-color: var(--bad); }
+.quiz .fb { font-size: 0.95rem; }
+.btn { font: 600 0.95rem var(--body); background: var(--accent); color: var(--surface); border: 0; padding: 9px 16px; border-radius: 8px; cursor: pointer; justify-self: start; }
+.btn.ghost { background: transparent; color: var(--accent); border: 1px solid var(--accent); }
+.btn.tiny { padding: 4px 10px; font-size: 0.85rem; }
+
+/* Calculator */
+.calc-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.field { display: grid; gap: 4px; min-width: 0; }
+.field label { font-size: 0.85rem; font-weight: 600; color: var(--muted); }
+input[type="number"], input[type="text"], input[type="date"], select { font: inherit; width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); min-width: 0; }
+input[type="range"] { width: 100%; accent-color: var(--accent); }
+.results { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.results div { display: grid; gap: 2px; }
+.results b { font-family: var(--mono); font-weight: 500; font-size: clamp(1.15rem, 3.6vw, 1.6rem); }
+.results .grow b { color: var(--accent); }
+.chart { width: 100%; height: auto; display: block; }
+.chart text { fill: var(--muted); font-family: var(--mono); font-size: 11px; }
+.legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: 0.85rem; color: var(--muted); }
+.legend i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
+.tablebox { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 0.95rem; }
+th, td { text-align: right; padding: 8px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+th:first-child, td:first-child { text-align: left; }
+th { font-family: var(--mono); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); font-weight: 500; }
+td { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+
+/* Portfolio */
+.pie-row { display: grid; grid-template-columns: 1fr 5.5rem auto; gap: 8px; align-items: center; }
+.pie-row input { padding: 6px 8px; }
+.alloc { display: flex; height: 16px; border-radius: 99px; overflow: hidden; background: var(--line); }
+.alloc i { display: block; height: 100%; }
+.warn { color: var(--bad); font-weight: 600; }
+.ok { color: var(--good); font-weight: 600; }
+.ci-form { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)) auto; gap: 10px; align-items: end; }
+.empty { border: 2px dashed var(--line); border-radius: 10px; padding: 22px; text-align: center; display: grid; gap: 6px; justify-items: center; color: var(--muted); }
+.save-state { font-family: var(--mono); font-size: 0.75rem; color: var(--muted); }
+.x { background: none; border: 0; color: var(--muted); cursor: pointer; font-size: 1.1rem; padding: 4px 8px; border-radius: 6px; }
+.x:hover { color: var(--bad); }
+
+footer { border-top: 1px solid var(--line); padding-block: 20px 40px; color: var(--muted); font-size: 0.85rem; }
+
+@media (max-width: 640px) {
+  .calc-grid, .results { grid-template-columns: 1fr 1fr; }
+  .ci-form { grid-template-columns: 1fr 1fr; }
+  body { font-size: 16px; }
+  nav.tabs button { padding: 12px 9px; font-size: 0.92rem; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<header class="hero wrap">
+  <span class="eyebrow">Your investing notebook · Trading 212 · £5 a day</span>
+  <h1>Fiver a Day<span class="coin">£5</span></h1>
+  <p>Learn investing from the ground up, set up a daily £5 habit, and track how it grows. Small amounts, a long time, no panic.</p>
+  <div class="statline">
+    <div><span class="eyebrow">Per year</span><b class="num">£1,825</b></div>
+    <div><span class="eyebrow">Lessons done</span><b class="num" id="statLessons">0 / 12</b></div>
+    <div><span class="eyebrow">Setup steps done</span><b class="num" id="statSetup">0 / 0</b></div>
+  </div>
+</header>
+
+<nav class="tabs" aria-label="Sections">
+  <div class="wrap" role="tablist">
+    <button role="tab" id="tab-plan" data-tab="plan" aria-selected="true">The plan</button>
+    <button role="tab" id="tab-learn" data-tab="learn" aria-selected="false">Learn</button>
+    <button role="tab" id="tab-grow" data-tab="grow" aria-selected="false">Growth calculator</button>
+    <button role="tab" id="tab-portfolio" data-tab="portfolio" aria-selected="false">My portfolio</button>
+  </div>
+</nav>
+
+<main class="wrap">
+  <!-- PLAN -->
+  <section id="plan" role="tabpanel" aria-labelledby="tab-plan">
+    <div class="lede">
+      <h2>The plan</h2>
+      <p class="muted">Five stages from "never invested" to "running on autopilot". Tick things off as you go; your progress is saved.</p>
+    </div>
+    <div class="phases" id="phases"></div>
+
+    <div class="card">
+      <h3>The rules you'll stick to</h3>
+      <ol class="rules">
+        <li>Keep investing every day, whatever the news says. Buying through falls is the whole point of the method.</li>
+        <li>Only invest money you won't need for at least 5 years.</li>
+        <li>Most of the money (80% or more) goes in a cheap global index fund. Picking stocks is for a small "explore" slice at most.</li>
+        <li>Check in once a month, log it here, then close the app. Daily checking leads to bad decisions.</li>
+        <li>Never sell because prices dropped. Only sell because your life needs the money or your plan changed.</li>
+        <li>Raise the daily amount when your income goes up, even by £1.</li>
+      </ol>
+    </div>
+
+    <div class="callout">
+      <b>This is education, not financial advice.</b>
+      <p>Investments can fall as well as rise and you may get back less than you put in. Past returns don't guarantee future ones. Fund names, fees and app features below were correct to the best of my knowledge in October 2026. Check them in the Trading 212 app and on the fund provider's site before you buy.</p>
+    </div>
+  </section>
+
+  <!-- LEARN -->
+  <section id="learn" role="tabpanel" aria-labelledby="tab-learn" hidden>
+    <div class="lede">
+      <h2>Learn from the ground up</h2>
+      <p class="muted">Twelve short lessons in a sensible order. Read one every few days. Each ends with one question to check it stuck. Answer it right and the lesson is marked done.</p>
+    </div>
+    <div class="progress">
+      <div class="bar"><i id="lessonBar"></i></div>
+      <span class="small muted" id="lessonText">0 of 12 lessons done</span>
+    </div>
+    <div class="lessons" id="lessons"></div>
+  </section>
+
+  <!-- GROW -->
+  <section id="grow" role="tabpanel" aria-labelledby="tab-grow" hidden>
+    <div class="lede">
+      <h2>What could £5 a day become?</h2>
+      <p class="muted">This shows the maths of compounding. Real markets don't move in a smooth line: some years fall 20% or more, others rise 25%. The line is an average, not a promise.</p>
+    </div>
+    <div class="card">
+      <div class="calc-grid">
+        <div class="field"><label for="cDaily">Daily amount (£)</label><input id="cDaily" type="number" min="1" step="1" value="5"></div>
+        <div class="field"><label for="cYears">Years: <span id="cYearsOut" class="num">20</span></label><input id="cYears" type="range" min="1" max="40" value="20"></div>
+        <div class="field"><label for="cRate">Average yearly return</label>
+          <select id="cRate">
+            <option value="0">0%: cash under the mattress</option>
+            <option value="4">4%: cautious</option>
+            <option value="7" selected>7%: long-run global shares</option>
+            <option value="10">10%: optimistic</option>
+          </select>
+        </div>
+      </div>
+      <div class="results">
+        <div><span class="eyebrow">You pay in</span><b id="rPaid">£0</b></div>
+        <div class="grow"><span class="eyebrow">Growth</span><b id="rGrowth">£0</b></div>
+        <div><span class="eyebrow">Estimated pot</span><b id="rTotal">£0</b></div>
+      </div>
+      <svg class="chart" id="calcChart" viewBox="0 0 640 260" role="img" aria-label="Projected pot over time"></svg>
+      <div class="legend"><span><i style="background:var(--accent)"></i>Estimated pot</span><span><i style="background:var(--gold)"></i>Money you paid in</span></div>
+    </div>
+    <div class="card">
+      <h3>Milestones</h3>
+      <div class="tablebox"><table id="milestones"></table></div>
+      <p class="small muted">Figures ignore inflation and fees. Take roughly 0.2% a year off for a cheap index fund. Inside an ISA there is no tax on the growth.</p>
+    </div>
+    <div class="callout green">
+      <b>Why time matters more than amount</b>
+      <p id="timeMsg">Starting 5 years earlier makes a bigger difference than doubling your fiver later.</p>
+    </div>
+  </section>
+
+  <!-- PORTFOLIO -->
+  <section id="portfolio" role="tabpanel" aria-labelledby="tab-portfolio" hidden>
+    <div class="lede">
+      <h2>My portfolio</h2>
+      <p class="muted">Mirror your Trading 212 Pie here, then log a check-in once a month. <span class="save-state" id="saveState"></span></p>
+    </div>
+
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:baseline">
+        <h3>My Pie</h3>
+        <span class="small" id="pieTotal"></span>
+      </div>
+      <div class="alloc" id="allocBar"></div>
+      <div id="pieRows" style="display:grid;gap:8px"></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn ghost tiny" id="addSlice">Add a slice</button>
+        <button class="btn ghost tiny" id="resetPie">Use the starter pie</button>
+      </div>
+      <p class="small muted" id="pieNote">Each slice should get at least £1 of every daily £5, so keep slices at 20% or more while you're on £5 a day.</p>
+    </div>
+
+    <div class="card">
+      <h3>Monthly check-in</h3>
+      <form class="ci-form" id="ciForm">
+        <div class="field"><label for="ciDate">Date</label><input id="ciDate" type="date" required></div>
+        <div class="field"><label for="ciPaid">Total paid in (£)</label><input id="ciPaid" type="number" min="0" step="0.01" required placeholder="150"></div>
+        <div class="field"><label for="ciValue">Pie value (£)</label><input id="ciValue" type="number" min="0" step="0.01" required placeholder="152.30"></div>
+        <button class="btn" type="submit">Log it</button>
+      </form>
+      <div id="ciOut"></div>
+    </div>
+  </section>
+</main>
+
+<footer class="wrap">
+  <p>Education only, not regulated financial advice. Your capital is at risk. Saved to your account when signed in to Claude; otherwise saved in this browser only.</p>
+</footer>
+
+<script>
+(function () {
+  "use strict";
+  var $ = function (s) { return document.querySelector(s); };
+  var gbp = function (n, dp) { return "£" + Number(n).toLocaleString("en-GB", { minimumFractionDigits: dp || 0, maximumFractionDigits: dp || 0 }); };
+  var esc = function (s) { var d = document.createElement("div"); d.textContent = String(s); return d.innerHTML; };
+
+  /* ---------- content ---------- */
+  var PHASES = [
+    { id: "p1", when: "Before you start · this week", title: "Get your foundations right",
+      body: "Investing comes after the basics. If any of these aren't true yet, sort them first or alongside your fiver.",
+      steps: [
+        ["f1", "I have no expensive debt (credit cards, overdraft, buy-now-pay-later). Paying off 20%+ interest beats any investment."],
+        ["f2", "I have an emergency fund of about 3 months' essential spending in an easy-access savings account (or I'm building one)."],
+        ["f3", "I'm in my workplace pension and getting the full employer match, if I have one. That match is free money."],
+        ["f4", "I've read lessons 1 to 3 in the Learn tab."]
+      ] },
+    { id: "p2", when: "Week 1", title: "Open a Stocks & Shares ISA on Trading 212",
+      body: "An ISA is a tax wrapper. Anything that grows inside it is free of UK tax on gains and dividends, for life. You can put up to £20,000 a year into ISAs; £5 a day is about £1,825, well inside that.",
+      steps: [
+        ["s1", "Download Trading 212 and verify my identity."],
+        ["s2", "Choose the Stocks & Shares ISA account (not the Invest or CFD account; avoid CFDs completely)."],
+        ["s3", "Top up by bank transfer. A monthly £150 transfer is simplest and avoids any card-deposit fees."]
+      ] },
+    { id: "p3", when: "Week 1", title: "Build your first Pie and turn on AutoInvest",
+      body: "A Pie is a basket of investments with target percentages. AutoInvest buys into it on a schedule. This is your £5 a day.",
+      steps: [
+        ["a1", "Create a Pie. Starter option: 100% Vanguard FTSE All-World (ticker VWRP), about 3,700 companies in one fund. See the My portfolio tab."],
+        ["a2", "Turn on AutoInvest (recurring investment) on the Pie: Daily, £5, paid from my ISA cash balance."],
+        ["a3", "Turn on dividend reinvestment for the Pie (VWRP reinvests automatically anyway, as an accumulating fund)."],
+        ["a4", "Log my first check-in here so I have a starting point."]
+      ] },
+    { id: "p4", when: "Months 1 to 3", title: "Learn while it runs",
+      body: "Your money is working; now your knowledge catches up. Don't change anything in the Pie during this stage.",
+      steps: [
+        ["l1", "Finish all 12 lessons."],
+        ["l2", "Do 3 monthly check-ins without selling anything."],
+        ["l3", "Live through at least one week where my Pie is red, and keep going."]
+      ] },
+    { id: "p5", when: "Month 3 onwards · every year", title: "Grow it, carefully",
+      body: "Once the habit is solid, you can tweak. Keep it boring: boring tends to win.",
+      steps: [
+        ["g1", "Optional: add an \"explore\" slice of up to 20% for a company or theme I've researched (lesson 11)."],
+        ["g2", "Each April (new tax year), review: still investing? Can I raise the daily amount?"],
+        ["g3", "Raise my daily amount at least once in the first year, even to £6."]
+      ] }
+  ];
+
+  var LESSONS = [
+    { t: "What is a share?", body: "<p>A share is a tiny slice of ownership in a company. If you own one Apple share, you own a microscopic part of Apple: its profits, factories and brand.</p><ul><li>Share prices rise when people expect the company to earn more in future, and fall when they expect less.</li><li>Some companies pay part of their profit to shareholders as <b>dividends</b>.</li><li>The <b>stock market</b> is just the place where people buy and sell these slices.</li><li>With <b>fractional shares</b> (which Trading 212 offers) you can buy £1 of a share that costs £200.</li></ul>", key: "Owning shares means owning businesses. Over long periods, businesses grow, and so does their value.",
+      q: "You own 0.5 of a share that trades at £100. Its price rises to £110. What is your holding worth?", o: ["£50", "£55", "£110"], a: 1, why: "Half a share at £110 is £55." },
+    { t: "Funds, index trackers and ETFs", body: "<p>Picking single companies is hard; even professionals mostly fail to beat the market. A <b>fund</b> pools money to buy many shares at once.</p><ul><li>An <b>index</b> is a list, like the FTSE 100 (100 biggest UK firms) or the FTSE All-World (thousands of firms in 50 countries).</li><li>An <b>index tracker</b> simply buys everything on the list. No star manager, so it's cheap.</li><li>An <b>ETF</b> (exchange-traded fund) is a fund you can buy and sell like a share, which is how it appears in Trading 212.</li><li>One global tracker gives you instant diversification across thousands of companies.</li></ul>", key: "For beginners, a global index tracker ETF does most of the work for you.",
+      q: "What does an index tracker fund do?", o: ["A manager picks the best stocks", "It buys every company on a list, like the FTSE All-World", "It only holds UK companies"], a: 1, why: "A tracker copies an index rather than trying to pick winners." },
+    { t: "Compounding: your money's money", body: "<p>When your investments grow, the growth itself starts growing. £100 growing 7% becomes £107. Next year the 7% is on £107, not £100.</p><ul><li>At 7% a year, money roughly doubles every 10 years (the <b>rule of 72</b>: 72 ÷ 7 ≈ 10).</li><li>Compounding is slow at first and dramatic later. Year 1 of £5 a day feels like nothing; year 25 doesn't.</li><li>Try the Growth calculator tab with different years to feel this.</li></ul>", key: "Time is the most powerful ingredient. Starting early with a little beats starting late with a lot.",
+      q: "Using the rule of 72, roughly how long does money take to double at 6% a year?", o: ["6 years", "12 years", "72 years"], a: 1, why: "72 ÷ 6 = 12 years." },
+    { t: "Risk and the ups and downs", body: "<p>Shares are volatile. A global index can fall 20 to 35% in a bad year (2008, March 2020, 2022). It has always recovered eventually, but that can take years.</p><ul><li><b>Volatility</b> is the price wobbling. It isn't a loss unless you sell.</li><li>The longer you hold, the less the wobbles matter. Over 1 year shares are a coin toss; over 15+ years, historically, a diversified global fund has very rarely lost money.</li><li>This is why money you'll need in under 5 years belongs in savings, not shares.</li></ul>", key: "Expect falls. They're the price you pay for higher long-run returns.",
+      q: "Your Pie falls 15% in a month. Under your plan, what do you do?", o: ["Sell before it drops further", "Keep the daily £5 going and do nothing else", "Stop AutoInvest until it recovers"], a: 1, why: "Your £5 now buys more at lower prices. Selling locks in the loss." },
+    { t: "Pound-cost averaging: your £5-a-day method", body: "<p>Investing a fixed amount on a regular schedule is called <b>pound-cost averaging</b>. When prices are low, your £5 buys more units; when high, fewer.</p><ul><li>You never have to guess the \"right time\" to invest. Nobody can do that reliably.</li><li>It turns falls into a discount sale rather than a disaster.</li><li>Daily, weekly or monthly all work similarly over the long run. Daily is great for habit; the important part is never stopping.</li></ul>", key: "Regular, automatic investing takes emotion and timing out of the picture.",
+      q: "A fund's price is £10 one day and £5 the next. You invest £5 each day. How many units do you have?", o: ["1 unit", "1.5 units", "2 units"], a: 1, why: "0.5 units at £10 plus 1 unit at £5 is 1.5 units, at an average cost of about £6.67, lower than the average price of £7.50." },
+    { t: "Fees: the silent leak", body: "<p>Small percentages compound too, in the wrong direction.</p><ul><li><b>OCF / TER</b>: the fund's yearly charge. Global trackers cost around 0.1% to 0.25%. Active funds often charge 0.75% to 1%+.</li><li><b>FX fee</b>: Trading 212 charges 0.15% to convert pounds into dollars or euros when you buy non-GBP shares. Choosing GBP-quoted ETFs (like VWRP on the London Stock Exchange) avoids it.</li><li><b>Spread</b>: the small gap between buy and sell prices. Another reason not to trade often.</li><li>Trading 212 charges no commission on shares and ETFs. Card top-ups can carry a fee above a free limit; bank transfer is free.</li></ul>", key: "Keep total yearly costs under about 0.3% and don't trade often.",
+      q: "Which is the bigger long-term drag on a 20-year investment?", o: ["A 0.15% one-off FX fee", "A 1% yearly fund charge", "They're about the same"], a: 1, why: "1% every year compounds against you; over 20 years it can cost around 17% of your pot." },
+    { t: "ISAs and UK tax", body: "<p>A <b>Stocks & Shares ISA</b> shelters your investments from UK tax: no tax on gains, dividends or withdrawals, and you don't have to report it on a tax return.</p><ul><li>Allowance: £20,000 per tax year across all your ISAs. The tax year runs 6 April to 5 April. Unused allowance doesn't roll over.</li><li>Outside an ISA you pay tax on gains above £3,000 a year and dividends above £500 a year.</li><li>You can usually take money out of an ISA any time; it just stops being sheltered.</li><li>The <b>FSCS</b> protects up to £85,000 if the broker itself fails. It doesn't protect you from investments falling.</li></ul>", key: "Use the ISA first. It's free tax protection.",
+      q: "Can you carry unused ISA allowance into next tax year?", o: ["Yes, it rolls over", "No, it resets each 6 April", "Only for under-25s"], a: 1, why: "Use it or lose it each tax year." },
+    { t: "Diversification", body: "<p>Don't put all your eggs in one basket. If one company fails, a diversified portfolio barely notices.</p><ul><li>Spread across many <b>companies</b>, <b>industries</b> and <b>countries</b>.</li><li>A global fund already does this. Adding an S&P 500 fund on top mostly doubles up on the same US companies, since the US is about 60% of the global market.</li><li>Owning 5 tech stocks isn't diversified, even though it's 5 things.</li></ul>", key: "One global fund is more diversified than most people's hand-picked portfolios.",
+      q: "Which is most diversified?", o: ["5 big US tech shares", "A FTSE All-World tracker", "A UK oil company and a UK bank"], a: 1, why: "The All-World tracker holds thousands of companies across many countries and industries." },
+    { t: "Accumulating vs distributing", body: "<p>Funds often come in two flavours.</p><ul><li><b>Accumulating (Acc)</b>: dividends are reinvested inside the fund automatically. The price grows faster. VWRP is accumulating.</li><li><b>Distributing (Dist)</b>: dividends are paid out to you as cash. VWRL is the distributing version of the same fund.</li><li>While you're building wealth, accumulating keeps things simple and compounding.</li></ul>", key: "Pick accumulating funds while you're growing your pot.",
+      q: "You want dividends reinvested without doing anything. Which do you choose?", o: ["Accumulating", "Distributing", "It doesn't matter"], a: 0, why: "Accumulating funds reinvest for you." },
+    { t: "Your behaviour is the biggest risk", body: "<p>Studies repeatedly find investors earn less than the funds they own, because they buy after rises and sell after falls.</p><ul><li><b>Fear</b>: selling in a crash. <b>Greed</b>: piling into whatever went up last month. <b>FOMO</b>: chasing tips from social media.</li><li>Rule of thumb: if it's trending on TikTok, you're late.</li><li>Your automatic £5 a day protects you from yourself. Let it.</li></ul>", key: "Boring and consistent beats clever and emotional.",
+      q: "A friend's crypto coin is up 300% this month. What fits your plan?", o: ["Move my Pie into it", "Put in a small amount I can afford to lose, outside my core plan, if anything", "Stop my index fund to fund it"], a: 1, why: "Your core plan stays untouched. Speculation, if any, is small and separate." },
+    { t: "Looking at a single company", body: "<p>If you add an \"explore\" slice, research the business before buying.</p><ul><li><b>What do they sell</b>, and would people still buy it in 10 years?</li><li><b>Revenue and profit</b>: are they growing over several years?</li><li><b>Debt</b>: can they survive a bad few years?</li><li><b>P/E ratio</b> (price ÷ earnings per share): how much you pay for £1 of yearly profit. High P/E means high expectations.</li><li>Write one sentence: \"I own this because…\". If you can't, don't buy it.</li></ul>", key: "Keep single stocks to a small slice and know why you own each one.",
+      q: "A company's share price is £50 and it earns £2.50 per share. What's its P/E?", o: ["2.5", "20", "125"], a: 1, why: "50 ÷ 2.5 = 20. You're paying £20 for each £1 of yearly profit." },
+    { t: "When you'd change the plan", body: "<p>A good plan changes for life reasons, not market reasons.</p><ul><li><b>Good reasons</b>: you need the money for a house deposit soon, your income changes, you've got new goals.</li><li><b>Bad reasons</b>: the market fell, a headline scared you, someone online made a prediction.</li><li>As a goal gets within about 5 years, gradually move that money towards safer things (cash savings, bonds).</li><li>For a house deposit, look into a <b>Lifetime ISA</b> if you're 18 to 39: the government adds 25%.</li></ul>", key: "Review once a year. Change course for your life, not for the news.",
+      q: "Which is a good reason to change your plan?", o: ["The FTSE fell 8% this week", "You plan to buy a home in 2 years", "A YouTuber predicts a crash"], a: 1, why: "A goal coming up soon changes how much risk is sensible for that money." }
+  ];
+
+  var STARTER = [{ name: "Vanguard FTSE All-World (Acc)", ticker: "VWRP", target: 100 }];
+  var SLICE_COLORS = ["var(--accent)", "var(--gold)", "#6C8BD8", "#C9668B", "#7AA35A", "#8E7CC3"];
+
+  /* ---------- state + persistence ---------- */
+  var state = { checks: {}, lessons: {}, pie: STARTER.slice(), checkins: [] };
+  var store = null; // {load, save}
+  var saveTimer = null, saving = false, dirty = false;
+  var LS_KEY = "fiver-a-day-v1";
+
+  function setSaveState(t) { var el = $("#saveState"); if (el) el.textContent = t; }
+
+  function lsStore() {
+    return {
+      kind: "browser",
+      load: function () { try { var r = localStorage.getItem(LS_KEY); return Promise.resolve(r ? JSON.parse(r) : null); } catch (e) { return Promise.resolve(null); } },
+      save: function (s) { try { localStorage.setItem(LS_KEY, JSON.stringify(s)); } catch (e) {} return Promise.resolve(); }
+    };
+  }
+
+  function queueSave() {
+    dirty = true;
+    setSaveState("Saving…");
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(flush, 700);
+  }
+  function flush() {
+    if (saving || !dirty || !store) return;
+    saving = true; dirty = false;
+    var snapshot = JSON.parse(JSON.stringify(state));
+    store.save(snapshot).then(function () {
+      setSaveState(store.kind === "account" ? "Saved to your account" : "Saved in this browser");
+    }, function (e) {
+      if (e && e.code === "invalid_argument" && store.kind === "account") { store = lsStore(); dirty = true; }
+      setSaveState("Couldn't save to your account; saving in this browser instead");
+    }).then(function () { saving = false; if (dirty) flush(); });
+  }
+
+  function mergeLoaded(d) {
+    if (!d) return;
+    if (d.checks && typeof d.checks === "object") state.checks = d.checks;
+    if (d.lessons && typeof d.lessons === "object") state.lessons = d.lessons;
+    if (Array.isArray(d.pie)) state.pie = d.pie;
+    if (Array.isArray(d.checkins)) state.checkins = d.checkins;
+  }
+
+  function initStore() {
+    var local = lsStore();
+    store = local;
+    local.load().then(function (d) { mergeLoaded(d); renderAll(); });
+    if (!window.claude || !window.claude.use) return;
+    Promise.all([window.claude.use("db"), window.claude.use("user")]).then(function (r) {
+      var db = r[0], user = r[1];
+      if (!db || !user) return null;
+      return user.id().then(function (id) {
+        if (!id) return null;
+        var ref = db.doc("data/users/" + id + "/notebook");
+        return ref.get().then(function (snap) {
+          store = {
+            kind: "account",
+            save: function (s) { return ref.set(s); }
+          };
+          if (snap.exists) { mergeLoaded(snap.data()); renderAll(); setSaveState("Saved to your account"); }
+          else { queueSave(); } // move any browser progress into the account
+        });
+      });
+    }).catch(function () { /* stay on browser storage */ });
+  }
+
+  /* ---------- tabs ---------- */
+  var TABS = ["plan", "learn", "grow", "portfolio"];
+  function showTab(name) {
+    if (TABS.indexOf(name) < 0) name = "plan";
+    TABS.forEach(function (t) {
+      $("#" + t).hidden = t !== name;
+      $("#tab-" + t).setAttribute("aria-selected", t === name ? "true" : "false");
+    });
+    try { sessionStorage.setItem("fiver-tab", name); } catch (e) {}
+  }
+  document.querySelectorAll("nav.tabs button").forEach(function (b) {
+    b.addEventListener("click", function () { showTab(b.dataset.tab); window.scrollTo({ top: 0 }); });
+  });
+
+  /* ---------- plan ---------- */
+  function renderPlan() {
+    var total = 0, done = 0;
+    $("#phases").innerHTML = PHASES.map(function (p) {
+      var pd = p.steps.filter(function (s) { return state.checks[s[0]]; }).length;
+      total += p.steps.length; done += pd;
+      return '<div class="phase' + (pd === p.steps.length ? " done" : "") + '">' +
+        '<span class="when">' + p.when + ' · ' + pd + '/' + p.steps.length + '</span>' +
+        '<h3>' + p.title + '</h3><p class="muted">' + p.body + '</p>' +
+        '<ul class="checks">' + p.steps.map(function (s) {
+          var on = !!state.checks[s[0]];
+          return '<li><label><input type="checkbox" id="chk-' + s[0] + '" data-chk="' + s[0] + '"' + (on ? " checked" : "") + '><span class="' + (on ? "done-text" : "") + '">' + s[1] + '</span></label></li>';
+        }).join("") + '</ul></div>';
+    }).join("");
+    $("#statSetup").textContent = done + " / " + total;
+  }
+  $("#phases").addEventListener("change", function (e) {
+    var k = e.target.dataset.chk; if (!k) return;
+    if (e.target.checked) state.checks[k] = true; else delete state.checks[k];
+    renderPlan(); queueSave();
+  });
+
+  /* ---------- lessons ---------- */
+  var openLesson = null;
+  function renderLessons() {
+    var done = 0;
+    $("#lessons").innerHTML = LESSONS.map(function (l, i) {
+      var id = "L" + (i + 1), ok = !!state.lessons[id];
+      if (ok) done++;
+      return '<details class="lesson" data-id="' + id + '"' + (openLesson === id ? " open" : "") + '>' +
+        '<summary><span class="lnum">' + String(i + 1).padStart(2, "0") + '</span><h3>' + l.t + '</h3><span class="ltag' + (ok ? " ok" : "") + '">' + (ok ? "Done" : "To read") + '</span></summary>' +
+        '<div class="lbody">' + l.body + '<p class="takeaway">Key takeaway: ' + l.key + '</p>' +
+        '<div class="quiz"><span class="eyebrow">Check yourself</span><p>' + l.q + '</p><div class="opts">' +
+        l.o.map(function (o, j) { return '<button type="button" data-l="' + i + '" data-o="' + j + '"' + (ok && j === l.a ? ' class="right"' : "") + '>' + o + '</button>'; }).join("") +
+        '</div><p class="fb" id="fb-' + id + '">' + (ok ? '<span class="ok">Correct.</span> ' + l.why : "") + '</p></div></div></details>';
+    }).join("");
+    $("#lessonBar").style.width = (done / LESSONS.length * 100) + "%";
+    $("#lessonText").textContent = done + " of " + LESSONS.length + " lessons done";
+    $("#statLessons").textContent = done + " / " + LESSONS.length;
+  }
+  $("#lessons").addEventListener("toggle", function (e) {
+    if (e.target.open) openLesson = e.target.dataset.id;
+  }, true);
+  $("#lessons").addEventListener("click", function (e) {
+    var b = e.target.closest("button[data-l]"); if (!b) return;
+    var i = +b.dataset.l, j = +b.dataset.o, l = LESSONS[i], id = "L" + (i + 1);
+    var fb = $("#fb-" + id);
+    b.parentNode.querySelectorAll("button").forEach(function (x) { x.classList.remove("right", "wrong"); });
+    if (j === l.a) {
+      b.classList.add("right");
+      fb.innerHTML = '<span class="ok">Correct.</span> ' + l.why;
+      if (!state.lessons[id]) { state.lessons[id] = true; openLesson = id; renderLessons(); renderPlan(); queueSave(); }
+    } else {
+      b.classList.add("wrong");
+      fb.innerHTML = '<span class="warn">Not quite.</span> Have another look at the lesson and try again.';
+    }
+  });
+
+  /* ---------- calculator ---------- */
+  function project(daily, years, ratePct) {
+    var monthly = daily * 365 / 12, r = Math.pow(1 + ratePct / 100, 1 / 12) - 1;
+    var pot = 0, paid = 0, pts = [{ y: 0, pot: 0, paid: 0 }];
+    for (var m = 1; m <= years * 12; m++) {
+      pot = pot * (1 + r) + monthly; paid += monthly;
+      if (m % 12 === 0) pts.push({ y: m / 12, pot: pot, paid: paid });
+    }
+    return pts;
+  }
+  function niceMax(v) {
+    if (v <= 0) return 1;
+    var p = Math.pow(10, Math.floor(Math.log10(v))), f = v / p;
+    return (f <= 1 ? 1 : f <= 2 ? 2 : f <= 2.5 ? 2.5 : f <= 5 ? 5 : 10) * p;
+  }
+  function short(n) { return n >= 1e6 ? "£" + (n / 1e6).toFixed(n % 1e6 ? 1 : 0) + "m" : n >= 1000 ? "£" + Math.round(n / 1000) + "k" : "£" + Math.round(n); }
+
+  function lineChart(svg, series, xLabel) {
+    // series: [{pts:[{x,v}], color, fill}]
+    var W = 640, H = 260, L = 52, R = 14, T = 12, B = 30;
+    var xs = [], vs = [];
+    series.forEach(function (s) { s.pts.forEach(function (p) { xs.push(p.x); vs.push(p.v); }); });
+    var xMin = Math.min.apply(null, xs), xMax = Math.max.apply(null, xs); if (xMax === xMin) xMax = xMin + 1;
+    var yMax = niceMax(Math.max.apply(null, vs.concat([1])));
+    var sx = function (x) { return L + (x - xMin) / (xMax - xMin) * (W - L - R); };
+    var sy = function (v) { return T + (1 - v / yMax) * (H - T - B); };
+    var out = "";
+    for (var i = 0; i <= 4; i++) {
+      var v = yMax * i / 4, y = sy(v);
+      out += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + y + '" y2="' + y + '" stroke="var(--line)" stroke-width="1"/>';
+      out += '<text x="' + (L - 8) + '" y="' + (y + 4) + '" text-anchor="end">' + short(v) + '</text>';
+    }
+    xLabel(xMin, xMax).forEach(function (t) { out += '<text x="' + sx(t.x) + '" y="' + (H - 8) + '" text-anchor="middle">' + t.label + '</text>'; });
+    series.forEach(function (s) {
+      var d = s.pts.map(function (p, k) { return (k ? "L" : "M") + sx(p.x).toFixed(1) + " " + sy(p.v).toFixed(1); }).join(" ");
+      if (s.fill) out += '<path d="' + d + ' L' + sx(s.pts[s.pts.length - 1].x).toFixed(1) + ' ' + sy(0) + ' L' + sx(s.pts[0].x).toFixed(1) + ' ' + sy(0) + ' Z" fill="' + s.color + '" fill-opacity="0.14" stroke="none"/>';
+      out += '<path d="' + d + '" fill="none" stroke="' + s.color + '" stroke-width="2.5" stroke-linejoin="round"' + (s.dash ? ' stroke-dasharray="5 4"' : "") + '/>';
+      var last = s.pts[s.pts.length - 1];
+      out += '<circle cx="' + sx(last.x) + '" cy="' + sy(last.v) + '" r="4" fill="' + s.color + '"/>';
+    });
+    svg.innerHTML = out;
+  }
+
+  function renderCalc() {
+    var daily = Math.max(0, +$("#cDaily").value || 0), years = +$("#cYears").value, rate = +$("#cRate").value;
+    $("#cYearsOut").textContent = years;
+    var pts = project(daily, years, rate), end = pts[pts.length - 1];
+    $("#rPaid").textContent = gbp(end.paid);
+    $("#rGrowth").textContent = gbp(end.pot - end.paid);
+    $("#rTotal").textContent = gbp(end.pot);
+    lineChart($("#calcChart"), [
+      { pts: pts.map(function (p) { return { x: p.y, v: p.pot }; }), color: "var(--accent)", fill: true },
+      { pts: pts.map(function (p) { return { x: p.y, v: p.paid }; }), color: "var(--gold)", dash: true }
+    ], function (a, b) {
+      var step = b <= 10 ? 1 : b <= 20 ? 5 : 10, t = [];
+      for (var x = 0; x <= b; x += step) t.push({ x: x, label: x === 0 ? "Now" : x + "y" });
+      return t;
+    });
+    var rows = [1, 5, 10, 20, 30, 40].filter(function (y) { return y <= Math.max(years, 30); });
+    var full = project(daily, 40, rate);
+    $("#milestones").innerHTML = "<thead><tr><th>After</th><th>Paid in</th><th>Growth</th><th>Pot</th></tr></thead><tbody>" +
+      rows.map(function (y) { var p = full[y]; return "<tr><td>" + y + (y === 1 ? " year" : " years") + "</td><td>" + gbp(p.paid) + "</td><td>" + gbp(p.pot - p.paid) + "</td><td>" + gbp(p.pot) + "</td></tr>"; }).join("") + "</tbody>";
+    var a = project(daily, 25, rate)[25].pot, b = project(daily * 2, 20, rate)[20].pot;
+    $("#timeMsg").textContent = "At " + rate + "% a year, " + gbp(daily) + " a day for 25 years grows to about " + gbp(a) + ". Doubling to " + gbp(daily * 2) + " a day but starting 5 years later gets about " + gbp(b) + (rate >= 7 ? ". Starting early does a lot of the work." : ". The higher the return, the more starting early matters.");
+  }
+  ["#cDaily", "#cYears", "#cRate"].forEach(function (s) { $(s).addEventListener("input", renderCalc); });
+
+  /* ---------- portfolio ---------- */
+  function renderPie() {
+    var tot = state.pie.reduce(function (s, p) { return s + (+p.target || 0); }, 0);
+    $("#pieRows").innerHTML = state.pie.map(function (p, i) {
+      return '<div class="pie-row">' +
+        '<input type="text" id="pn-' + i + '" data-i="' + i + '" data-k="name" aria-label="Fund or company name" value="' + esc(p.name) + (p.ticker ? "" : "") + '" placeholder="Fund or company (ticker)">' +
+        '<input type="number" id="pt-' + i + '" data-i="' + i + '" data-k="target" aria-label="Target percent" min="0" max="100" step="1" value="' + (+p.target || 0) + '">' +
+        '<button class="x" data-del="' + i + '" aria-label="Remove slice">×</button></div>';
+    }).join("") || '<p class="muted small">No slices yet. Add one, or use the starter pie.</p>';
+    $("#allocBar").innerHTML = state.pie.map(function (p, i) { return '<i style="width:' + Math.max(0, +p.target || 0) / Math.max(100, tot) * 100 + '%;background:' + SLICE_COLORS[i % SLICE_COLORS.length] + '" title="' + esc(p.name) + '"></i>'; }).join("");
+    $("#pieTotal").innerHTML = tot === 100 ? '<span class="ok">Adds up to 100%</span>' : '<span class="warn">Adds up to ' + tot + '%; aim for 100%</span>';
+    var small = state.pie.filter(function (p) { return (+p.target || 0) > 0 && (+p.target || 0) < 20; }).length;
+    $("#pieNote").innerHTML = small ? '<span class="warn">' + small + (small === 1 ? " slice is" : " slices are") + ' under 20%.</span> At £5 a day that slice gets less than £1 per buy, which may be below Trading 212\'s minimum. Use fewer, bigger slices or raise the daily amount.'
+      : "Each slice should get at least £1 of every daily £5, so keep slices at 20% or more while you're on £5 a day.";
+  }
+  $("#pieRows").addEventListener("change", function (e) {
+    var i = e.target.dataset.i, k = e.target.dataset.k; if (i == null) return;
+    state.pie[+i][k] = k === "target" ? Math.max(0, Math.min(100, +e.target.value || 0)) : e.target.value.slice(0, 80);
+    renderPie(); queueSave();
+  });
+  $("#pieRows").addEventListener("click", function (e) {
+    var d = e.target.dataset.del; if (d == null) return;
+    state.pie.splice(+d, 1); renderPie(); queueSave();
+  });
+  $("#addSlice").addEventListener("click", function () { state.pie.push({ name: "", target: 0 }); renderPie(); queueSave(); var last = $("#pn-" + (state.pie.length - 1)); if (last) last.focus(); });
+  $("#resetPie").addEventListener("click", function () { state.pie = STARTER.map(function (p) { return Object.assign({}, p); }); renderPie(); queueSave(); });
+
+  function renderCheckins() {
+    var c = state.checkins.slice().sort(function (a, b) { return a.date < b.date ? -1 : 1; });
+    if (!c.length) {
+      $("#ciOut").innerHTML = '<div class="empty"><b>No check-ins yet</b><span class="small">Once a month, open Trading 212, note your ISA\'s total deposits and current value, and log them above. Your chart of money paid in versus value will build up here.</span></div>';
+      return;
+    }
+    var last = c[c.length - 1], gain = last.value - last.paid, pct = last.paid ? gain / last.paid * 100 : 0;
+    var html = '<div class="results" style="margin-top:6px"><div><span class="eyebrow">Paid in</span><b>' + gbp(last.paid, 2) + '</b></div>' +
+      '<div class="grow"><span class="eyebrow">Gain / loss</span><b style="color:' + (gain >= 0 ? "var(--good)" : "var(--bad)") + '">' + (gain >= 0 ? "+" : "−") + gbp(Math.abs(gain), 2) + ' <span class="small">(' + (pct >= 0 ? "+" : "") + pct.toFixed(1) + '%)</span></b></div>' +
+      '<div><span class="eyebrow">Value</span><b>' + gbp(last.value, 2) + '</b></div></div>';
+    if (c.length >= 2) html += '<svg class="chart" id="ciChart" viewBox="0 0 640 260" role="img" aria-label="Value versus money paid in"></svg><div class="legend"><span><i style="background:var(--accent)"></i>Pie value</span><span><i style="background:var(--gold)"></i>Paid in</span></div>';
+    else html += '<p class="small muted">Log another check-in next month to start your chart.</p>';
+    if (gain < 0) html += '<div class="callout"><b>You\'re down right now, and that\'s normal.</b><p>Your daily £5 is buying at lower prices. Stick to rule 1 and keep going.</p></div>';
+    html += '<div class="tablebox"><table><thead><tr><th>Date</th><th>Paid in</th><th>Value</th><th>Gain</th><th></th></tr></thead><tbody>' +
+      c.slice().reverse().map(function (r) {
+        var g = r.value - r.paid;
+        return '<tr><td>' + new Date(r.date + "T00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) + '</td><td>' + gbp(r.paid, 2) + '</td><td>' + gbp(r.value, 2) + '</td><td style="color:' + (g >= 0 ? "var(--good)" : "var(--bad)") + '">' + (g >= 0 ? "+" : "−") + gbp(Math.abs(g), 2) + '</td><td><button class="x" data-ci="' + esc(r.id) + '" aria-label="Delete check-in">×</button></td></tr>';
+      }).join("") + '</tbody></table></div>';
+    $("#ciOut").innerHTML = html;
+    if (c.length >= 2) {
+      var t0 = Date.parse(c[0].date), day = 864e5;
+      var X = function (r) { return (Date.parse(r.date) - t0) / day; };
+      lineChart($("#ciChart"), [
+        { pts: c.map(function (r) { return { x: X(r), v: r.value }; }), color: "var(--accent)", fill: true },
+        { pts: c.map(function (r) { return { x: X(r), v: r.paid }; }), color: "var(--gold)", dash: true }
+      ], function (a, b) {
+        return [0, 0.5, 1].map(function (f) { var x = a + (b - a) * f; return { x: x, label: new Date(t0 + x * day).toLocaleDateString("en-GB", { month: "short", year: "2-digit" }) }; });
+      });
+    }
+  }
+  $("#ciForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var d = $("#ciDate").value, p = +$("#ciPaid").value, v = +$("#ciValue").value;
+    if (!d || !(p >= 0) || !(v >= 0)) return;
+    state.checkins = state.checkins.filter(function (r) { return r.date !== d; });
+    state.checkins.push({ id: d + "-" + Math.random().toString(36).slice(2, 7), date: d, paid: p, value: v });
+    if (state.checkins.length > 600) state.checkins = state.checkins.slice(-600);
+    $("#ciPaid").value = ""; $("#ciValue").value = "";
+    state.checks.a4 = true;
+    renderCheckins(); renderPlan(); queueSave();
+  });
+  $("#ciOut").addEventListener("click", function (e) {
+    var id = e.target.dataset.ci; if (!id) return;
+    state.checkins = state.checkins.filter(function (r) { return r.id !== id; });
+    renderCheckins(); queueSave();
+  });
+
+  function renderAll() { renderPlan(); renderLessons(); renderPie(); renderCheckins(); }
+
+  /* ---------- boot ---------- */
+  $("#ciDate").value = new Date().toISOString().slice(0, 10);
+  var start = (location.hash || "").slice(1);
+  if (!start) { try { start = sessionStorage.getItem("fiver-tab") || "plan"; } catch (e) { start = "plan"; } }
+  showTab(start);
+  renderAll(); renderCalc();
+  initStore();
+})();
+</script>
