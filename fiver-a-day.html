@@ -186,8 +186,8 @@ footer { border-top: 1px solid var(--line); padding-block: 20px 40px; color: var
       <ol class="rules">
         <li>Keep investing every day, whatever the news says. Buying through falls is the whole point of the method.</li>
         <li>Only invest money you won't need for at least 5 years.</li>
-        <li>Most of the money (80% or more) goes in a cheap global index fund. Picking stocks is for a small "explore" slice at most.</li>
-        <li>Check in once a month, log it here, then close the app. Daily checking leads to bad decisions.</li>
+        <li>At least 80% goes in a cheap global index fund. Individual companies live in the 20% "explore" slice, never more.</li>
+        <li>Check in once a week when your reminder arrives, log it here, then close the app. Checking every day leads to bad decisions.</li>
         <li>Never sell because prices dropped. Only sell because your life needs the money or your plan changed.</li>
         <li>Raise the daily amount when your income goes up, even by £1.</li>
       </ol>
@@ -195,7 +195,7 @@ footer { border-top: 1px solid var(--line); padding-block: 20px 40px; color: var
 
     <div class="callout">
       <b>This is education, not financial advice.</b>
-      <p>Investments can fall as well as rise and you may get back less than you put in. Past returns don't guarantee future ones. Fund names, fees and app features below were correct to the best of my knowledge in October 2026. Check them in the Trading 212 app and on the fund provider's site before you buy.</p>
+      <p>Investments can fall as well as rise and you may get back less than you put in. Past returns don't guarantee future ones. Tax rules, fund names, fees and app features below were correct to the best of my knowledge in October 2026. Check them in the Trading 212 app and on the fund provider's site before you buy.</p>
     </div>
   </section>
 
@@ -242,7 +242,7 @@ footer { border-top: 1px solid var(--line); padding-block: 20px 40px; color: var
     <div class="card">
       <h3>Milestones</h3>
       <div class="tablebox"><table id="milestones"></table></div>
-      <p class="small muted">Figures ignore inflation and fees. Take roughly 0.2% a year off for a cheap index fund. Inside an ISA there is no tax on the growth.</p>
+      <p class="small muted">Figures ignore inflation and fees. Take roughly 0.2% a year off for a cheap index fund. In your Invest account, profits you sell are tax-free up to £3,000 a year and dividends up to £500 a year.</p>
     </div>
     <div class="callout green">
       <b>Why time matters more than amount</b>
@@ -254,7 +254,7 @@ footer { border-top: 1px solid var(--line); padding-block: 20px 40px; color: var
   <section id="portfolio" role="tabpanel" aria-labelledby="tab-portfolio" hidden>
     <div class="lede">
       <h2>My portfolio</h2>
-      <p class="muted">Mirror your Trading 212 Pie here, then log a check-in once a month. <span class="save-state" id="saveState"></span></p>
+      <p class="muted">Mirror your Trading 212 Pie here, then log a check-in when your weekly reminder arrives. <span class="save-state" id="saveState"></span></p>
     </div>
 
     <div class="card">
@@ -272,7 +272,7 @@ footer { border-top: 1px solid var(--line); padding-block: 20px 40px; color: var
     </div>
 
     <div class="card">
-      <h3>Monthly check-in</h3>
+      <h3>Weekly check-in</h3>
       <form class="ci-form" id="ciForm">
         <div class="field"><label for="ciDate">Date</label><input id="ciDate" type="date" required></div>
         <div class="field"><label for="ciPaid">Total paid in (£)</label><input id="ciPaid" type="number" min="0" step="0.01" required placeholder="150"></div>
@@ -305,18 +305,18 @@ footer { border-top: 1px solid var(--line); padding-block: 20px 40px; color: var
         ["f3", "I'm in my workplace pension and getting the full employer match, if I have one. That match is free money."],
         ["f4", "I've read lessons 1 to 3 in the Learn tab."]
       ] },
-    { id: "p2", when: "Week 1", title: "Open a Stocks & Shares ISA on Trading 212",
-      body: "An ISA is a tax wrapper. Anything that grows inside it is free of UK tax on gains and dividends, for life. You can put up to £20,000 a year into ISAs; £5 a day is about £1,825, well inside that.",
+    { id: "p2", when: "Week 1", title: "Open a Trading 212 Invest account",
+      body: "Your other ISA already uses this year's £20,000 ISA allowance, so this money goes in an ordinary taxable account, called a General Investment Account. Trading 212 calls it Invest. At £5 a day you're very unlikely to owe any tax for years. Lesson 7 explains why and which records to keep.",
       steps: [
         ["s1", "Download Trading 212 and verify my identity."],
-        ["s2", "Choose the Stocks & Shares ISA account (not the Invest or CFD account; avoid CFDs completely)."],
+        ["s2", "Choose the Invest account. Not the ISA (my allowance is used) and not CFDs (avoid them completely)."],
         ["s3", "Top up by bank transfer. A monthly £150 transfer is simplest and avoids any card-deposit fees."]
       ] },
     { id: "p3", when: "Week 1", title: "Build your first Pie and turn on AutoInvest",
       body: "A Pie is a basket of investments with target percentages. AutoInvest buys into it on a schedule. This is your £5 a day.",
       steps: [
-        ["a1", "Create a Pie. Starter option: 100% Vanguard FTSE All-World (ticker VWRP), about 3,700 companies in one fund. See the My portfolio tab."],
-        ["a2", "Turn on AutoInvest (recurring investment) on the Pie: Daily, £5, paid from my ISA cash balance."],
+        ["a1", "Create a Pie. Starter option: 100% Vanguard FTSE All-World (ticker VWRP), about 3,700 companies in one fund. The 20% explore slice comes later, once I've done lesson 11."],
+        ["a2", "Turn on AutoInvest (recurring investment) on the Pie: Daily, £5, paid from my Invest account cash balance."],
         ["a3", "Turn on dividend reinvestment for the Pie (VWRP reinvests automatically anyway, as an accumulating fund)."],
         ["a4", "Log my first check-in here so I have a starting point."]
       ] },
@@ -324,14 +324,16 @@ footer { border-top: 1px solid var(--line); padding-block: 20px 40px; color: var
       body: "Your money is working; now your knowledge catches up. Don't change anything in the Pie during this stage.",
       steps: [
         ["l1", "Finish all 12 lessons."],
-        ["l2", "Do 3 monthly check-ins without selling anything."],
+        ["l2", "Do 10 weekly check-ins without selling anything."],
         ["l3", "Live through at least one week where my Pie is red, and keep going."]
       ] },
     { id: "p5", when: "Month 3 onwards · every year", title: "Grow it, carefully",
       body: "Once the habit is solid, you can tweak. Keep it boring: boring tends to win.",
       steps: [
-        ["g1", "Optional: add an \"explore\" slice of up to 20% for a company or theme I've researched (lesson 11)."],
-        ["g2", "Each April (new tax year), review: still investing? Can I raise the daily amount?"],
+        ["g1", "Pick one company I've researched (lesson 11) and give it a 20% slice, leaving 80% in VWRP. At £5 a day that slice gets £1 per buy."],
+        ["g4", "Want more than one company? Make a second Explore Pie with weekly AutoInvest, e.g. £7 a week split across up to 5 companies, and drop the core Pie to £4 a day."],
+        ["g5", "Each April, download Trading 212's yearly statement and check dividends stayed under £500 and any profits I sold stayed under £3,000."],
+        ["g2", "Each April (new tax year), review: still investing? Can I raise the daily amount? If my other ISA ever has spare allowance, could I move this money into an ISA?"],
         ["g3", "Raise my daily amount at least once in the first year, even to £6."]
       ] }
   ];
@@ -347,10 +349,10 @@ footer { border-top: 1px solid var(--line); padding-block: 20px 40px; color: var
       q: "Your Pie falls 15% in a month. Under your plan, what do you do?", o: ["Sell before it drops further", "Keep the daily £5 going and do nothing else", "Stop AutoInvest until it recovers"], a: 1, why: "Your £5 now buys more at lower prices. Selling locks in the loss." },
     { t: "Pound-cost averaging: your £5-a-day method", body: "<p>Investing a fixed amount on a regular schedule is called <b>pound-cost averaging</b>. When prices are low, your £5 buys more units; when high, fewer.</p><ul><li>You never have to guess the \"right time\" to invest. Nobody can do that reliably.</li><li>It turns falls into a discount sale rather than a disaster.</li><li>Daily, weekly or monthly all work similarly over the long run. Daily is great for habit; the important part is never stopping.</li></ul>", key: "Regular, automatic investing takes emotion and timing out of the picture.",
       q: "A fund's price is £10 one day and £5 the next. You invest £5 each day. How many units do you have?", o: ["1 unit", "1.5 units", "2 units"], a: 1, why: "0.5 units at £10 plus 1 unit at £5 is 1.5 units, at an average cost of about £6.67, lower than the average price of £7.50." },
-    { t: "Fees: the silent leak", body: "<p>Small percentages compound too, in the wrong direction.</p><ul><li><b>OCF / TER</b>: the fund's yearly charge. Global trackers cost around 0.1% to 0.25%. Active funds often charge 0.75% to 1%+.</li><li><b>FX fee</b>: Trading 212 charges 0.15% to convert pounds into dollars or euros when you buy non-GBP shares. Choosing GBP-quoted ETFs (like VWRP on the London Stock Exchange) avoids it.</li><li><b>Spread</b>: the small gap between buy and sell prices. Another reason not to trade often.</li><li>Trading 212 charges no commission on shares and ETFs. Card top-ups can carry a fee above a free limit; bank transfer is free.</li></ul>", key: "Keep total yearly costs under about 0.3% and don't trade often.",
+    { t: "Fees: the silent leak", body: "<p>Small percentages compound too, in the wrong direction.</p><ul><li><b>OCF / TER</b>: the fund's yearly charge. Global trackers cost around 0.1% to 0.25%. Active funds often charge 0.75% to 1%+.</li><li><b>FX fee</b>: Trading 212 charges 0.15% to convert pounds into dollars or euros when you buy non-GBP shares. Choosing GBP-quoted ETFs (like VWRP on the London Stock Exchange) avoids it.</li><li><b>Spread</b>: the small gap between buy and sell prices. Another reason not to trade often.</li><li>Buying UK company shares adds 0.5% stamp duty; ETFs like VWRP don't have it.</li><li>Trading 212 charges no commission on shares and ETFs. Card top-ups can carry a fee above a free limit; bank transfer is free.</li></ul>", key: "Keep total yearly costs under about 0.3% and don't trade often.",
       q: "Which is the bigger long-term drag on a 20-year investment?", o: ["A 0.15% one-off FX fee", "A 1% yearly fund charge", "They're about the same"], a: 1, why: "1% every year compounds against you; over 20 years it can cost around 17% of your pot." },
-    { t: "ISAs and UK tax", body: "<p>A <b>Stocks & Shares ISA</b> shelters your investments from UK tax: no tax on gains, dividends or withdrawals, and you don't have to report it on a tax return.</p><ul><li>Allowance: £20,000 per tax year across all your ISAs. The tax year runs 6 April to 5 April. Unused allowance doesn't roll over.</li><li>Outside an ISA you pay tax on gains above £3,000 a year and dividends above £500 a year.</li><li>You can usually take money out of an ISA any time; it just stops being sheltered.</li><li>The <b>FSCS</b> protects up to £85,000 if the broker itself fails. It doesn't protect you from investments falling.</li></ul>", key: "Use the ISA first. It's free tax protection.",
-      q: "Can you carry unused ISA allowance into next tax year?", o: ["Yes, it rolls over", "No, it resets each 6 April", "Only for under-25s"], a: 1, why: "Use it or lose it each tax year." },
+    { t: "Tax: ISAs and your Invest account", body: "<p>An <b>ISA</b> shelters investments from UK tax, but you can only put £20,000 a year into ISAs in total (tax year 6 April to 5 April). Your other ISA uses that, so your fiver goes in a <b>General Investment Account</b> (Trading 212 Invest). That is taxable, but with generous tax-free allowances.</p><ul><li><b>Capital Gains Tax</b> is only due when you <i>sell</i> at a profit, and only on profits above £3,000 per tax year. Prices rising while you hold costs nothing.</li><li><b>Dividends</b>: the first £500 a year is tax-free. VWRP pays roughly 1.5 to 2% a year, so you'd need a pot of about £25,000 before going over. At £5 a day that's more than 10 years away.</li><li><b>The accumulating-fund catch</b>: dividends that VWRP reinvests for you still count as your dividend income for tax. Vanguard publishes the figure each year (\"excess reportable income\"). It only matters once you near the £500.</li><li><b>Keep records</b>: save Trading 212's yearly statement every April. You only deal with HMRC (Self Assessment) if you go over an allowance.</li><li>The <b>FSCS</b> protects up to £85,000 if the broker itself fails. It doesn't protect you from investments falling.</li></ul>", key: "At £5 a day, your Invest account should be tax-free for years. Keep the yearly statements and you're ready if that changes.",
+      q: "Your shares rose by £800 this year but you haven't sold any. How much Capital Gains Tax do you owe?", o: ["None", "Tax on the £800", "Tax on anything over £500"], a: 0, why: "Gains are only taxed when you sell, and only above £3,000 a year." },
     { t: "Diversification", body: "<p>Don't put all your eggs in one basket. If one company fails, a diversified portfolio barely notices.</p><ul><li>Spread across many <b>companies</b>, <b>industries</b> and <b>countries</b>.</li><li>A global fund already does this. Adding an S&P 500 fund on top mostly doubles up on the same US companies, since the US is about 60% of the global market.</li><li>Owning 5 tech stocks isn't diversified, even though it's 5 things.</li></ul>", key: "One global fund is more diversified than most people's hand-picked portfolios.",
       q: "Which is most diversified?", o: ["5 big US tech shares", "A FTSE All-World tracker", "A UK oil company and a UK bank"], a: 1, why: "The All-World tracker holds thousands of companies across many countries and industries." },
     { t: "Accumulating vs distributing", body: "<p>Funds often come in two flavours.</p><ul><li><b>Accumulating (Acc)</b>: dividends are reinvested inside the fund automatically. The price grows faster. VWRP is accumulating.</li><li><b>Distributing (Dist)</b>: dividends are paid out to you as cash. VWRL is the distributing version of the same fund.</li><li>While you're building wealth, accumulating keeps things simple and compounding.</li></ul>", key: "Pick accumulating funds while you're growing your pot.",
@@ -359,11 +361,11 @@ footer { border-top: 1px solid var(--line); padding-block: 20px 40px; color: var
       q: "A friend's crypto coin is up 300% this month. What fits your plan?", o: ["Move my Pie into it", "Put in a small amount I can afford to lose, outside my core plan, if anything", "Stop my index fund to fund it"], a: 1, why: "Your core plan stays untouched. Speculation, if any, is small and separate." },
     { t: "Looking at a single company", body: "<p>If you add an \"explore\" slice, research the business before buying.</p><ul><li><b>What do they sell</b>, and would people still buy it in 10 years?</li><li><b>Revenue and profit</b>: are they growing over several years?</li><li><b>Debt</b>: can they survive a bad few years?</li><li><b>P/E ratio</b> (price ÷ earnings per share): how much you pay for £1 of yearly profit. High P/E means high expectations.</li><li>Write one sentence: \"I own this because…\". If you can't, don't buy it.</li></ul>", key: "Keep single stocks to a small slice and know why you own each one.",
       q: "A company's share price is £50 and it earns £2.50 per share. What's its P/E?", o: ["2.5", "20", "125"], a: 1, why: "50 ÷ 2.5 = 20. You're paying £20 for each £1 of yearly profit." },
-    { t: "When you'd change the plan", body: "<p>A good plan changes for life reasons, not market reasons.</p><ul><li><b>Good reasons</b>: you need the money for a house deposit soon, your income changes, you've got new goals.</li><li><b>Bad reasons</b>: the market fell, a headline scared you, someone online made a prediction.</li><li>As a goal gets within about 5 years, gradually move that money towards safer things (cash savings, bonds).</li><li>For a house deposit, look into a <b>Lifetime ISA</b> if you're 18 to 39: the government adds 25%.</li></ul>", key: "Review once a year. Change course for your life, not for the news.",
+    { t: "When you'd change the plan", body: "<p>A good plan changes for life reasons, not market reasons.</p><ul><li><b>Good reasons</b>: you need the money for a house deposit soon, your income changes, you've got new goals.</li><li><b>Bad reasons</b>: the market fell, a headline scared you, someone online made a prediction.</li><li>As a goal gets within about 5 years, gradually move that money towards safer things (cash savings, bonds).</li><li>For a first-home deposit, a <b>Lifetime ISA</b> (age 18 to 39) gets a 25% government bonus, but it counts towards the same £20,000 ISA allowance. Ask whoever manages your other ISA before opening one.</li></ul>", key: "Review once a year. Change course for your life, not for the news.",
       q: "Which is a good reason to change your plan?", o: ["The FTSE fell 8% this week", "You plan to buy a home in 2 years", "A YouTuber predicts a crash"], a: 1, why: "A goal coming up soon changes how much risk is sensible for that money." }
   ];
 
-  var STARTER = [{ name: "Vanguard FTSE All-World (Acc)", ticker: "VWRP", target: 100 }];
+  var STARTER = [{ name: "Vanguard FTSE All-World (VWRP)", target: 80 }, { name: "Explore pick: one company, after lesson 11", target: 20 }];
   var SLICE_COLORS = ["var(--accent)", "var(--gold)", "#6C8BD8", "#C9668B", "#7AA35A", "#8E7CC3"];
 
   /* ---------- state + persistence ---------- */
@@ -600,7 +602,7 @@ footer { border-top: 1px solid var(--line); padding-block: 20px 40px; color: var
   function renderCheckins() {
     var c = state.checkins.slice().sort(function (a, b) { return a.date < b.date ? -1 : 1; });
     if (!c.length) {
-      $("#ciOut").innerHTML = '<div class="empty"><b>No check-ins yet</b><span class="small">Once a month, open Trading 212, note your ISA\'s total deposits and current value, and log them above. Your chart of money paid in versus value will build up here.</span></div>';
+      $("#ciOut").innerHTML = '<div class="empty"><b>No check-ins yet</b><span class="small">Once a week, open Trading 212, note your Invest account\'s total deposits and current value, and log them above. Your chart of money paid in versus value will build up here.</span></div>';
       return;
     }
     var last = c[c.length - 1], gain = last.value - last.paid, pct = last.paid ? gain / last.paid * 100 : 0;
@@ -608,7 +610,7 @@ footer { border-top: 1px solid var(--line); padding-block: 20px 40px; color: var
       '<div class="grow"><span class="eyebrow">Gain / loss</span><b style="color:' + (gain >= 0 ? "var(--good)" : "var(--bad)") + '">' + (gain >= 0 ? "+" : "−") + gbp(Math.abs(gain), 2) + ' <span class="small">(' + (pct >= 0 ? "+" : "") + pct.toFixed(1) + '%)</span></b></div>' +
       '<div><span class="eyebrow">Value</span><b>' + gbp(last.value, 2) + '</b></div></div>';
     if (c.length >= 2) html += '<svg class="chart" id="ciChart" viewBox="0 0 640 260" role="img" aria-label="Value versus money paid in"></svg><div class="legend"><span><i style="background:var(--accent)"></i>Pie value</span><span><i style="background:var(--gold)"></i>Paid in</span></div>';
-    else html += '<p class="small muted">Log another check-in next month to start your chart.</p>';
+    else html += '<p class="small muted">Log another check-in next week to start your chart.</p>';
     if (gain < 0) html += '<div class="callout"><b>You\'re down right now, and that\'s normal.</b><p>Your daily £5 is buying at lower prices. Stick to rule 1 and keep going.</p></div>';
     html += '<div class="tablebox"><table><thead><tr><th>Date</th><th>Paid in</th><th>Value</th><th>Gain</th><th></th></tr></thead><tbody>' +
       c.slice().reverse().map(function (r) {
