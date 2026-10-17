@@ -1,0 +1,4 @@
+# Personal financial data stays out of git while this repository is public.
+# The weekly job only force-adds data/ when the repository is private.
+data/
+__pycache__/

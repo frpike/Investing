@@ -143,7 +143,32 @@ td { font-family: var(--mono); font-variant-numeric: tabular-nums; }
 
 footer { border-top: 1px solid var(--line); padding-block: 20px 40px; color: var(--muted); font-size: 0.85rem; }
 
+/* Insights */
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip-btn { font: 600 0.85rem var(--body); background: var(--accent-soft); color: var(--accent); border: 1px solid transparent; border-radius: 99px; padding: 5px 12px; cursor: pointer; text-align: left; }
+.chip-btn:hover { border-color: var(--accent); }
+.holdings .chip-btn { justify-self: start; }
+.holdings { align-items: start; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 12px; }
+.hold-head { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; flex-wrap: wrap; }
+.hold-head .num { font-size: 1.1rem; }
+.kv { display: grid; grid-template-columns: max-content 1fr; gap: 6px 14px; margin: 0; font-size: 0.93rem; }
+.kv dt { color: var(--muted); font-weight: 600; }
+.kv dd { margin: 0; min-width: 0; }
+.acts { display: grid; }
+.act { display: grid; grid-template-columns: 6.5rem 1fr; gap: 12px; align-items: start; padding-block: 12px; border-top: 1px solid var(--line); }
+.act:first-child { border-top: 0; }
+.act b { display: block; }
+.pill { font-family: var(--mono); font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.06em; padding: 3px 8px; border-radius: 99px; text-align: center; border: 1px solid currentColor; }
+.pill.good { color: var(--good); }
+.pill.heads { color: var(--gold); }
+.pill.act-now { color: var(--bad); }
+textarea { font: inherit; width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); resize: vertical; }
+.answer { white-space: pre-wrap; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; line-height: 1.6; }
+.src-tag { font-family: var(--mono); font-size: 0.68rem; color: var(--accent); margin-left: 6px; }
+
 @media (max-width: 640px) {
+  .act { grid-template-columns: 1fr; gap: 6px; }
+  .act .pill { justify-self: start; }
   .calc-grid, .results { grid-template-columns: 1fr 1fr; }
   .ci-form { grid-template-columns: 1fr 1fr; }
   body { font-size: 16px; }
@@ -169,6 +194,7 @@ footer { border-top: 1px solid var(--line); padding-block: 20px 40px; color: var
     <button role="tab" id="tab-learn" data-tab="learn" aria-selected="false">Learn</button>
     <button role="tab" id="tab-grow" data-tab="grow" aria-selected="false">Growth calculator</button>
     <button role="tab" id="tab-portfolio" data-tab="portfolio" aria-selected="false">My portfolio</button>
+    <button role="tab" id="tab-insights" data-tab="insights" aria-selected="false">Insights</button>
   </div>
 </nav>
 
@@ -282,10 +308,47 @@ footer { border-top: 1px solid var(--line); padding-block: 20px 40px; color: var
       <div id="ciOut"></div>
     </div>
   </section>
+  <!-- INSIGHTS -->
+  <section id="insights" role="tabpanel" aria-labelledby="tab-insights" hidden>
+    <div class="lede">
+      <h2>My investments, explained</h2>
+      <p class="muted" id="insSource"></p>
+    </div>
+    <div id="insWeekly"></div>
+    <div class="card">
+      <h3>Where you are</h3>
+      <div class="results" id="insSummary"></div>
+    </div>
+    <div class="lede">
+      <h3>What you own</h3>
+      <p class="muted small">What each holding is, what's inside it and what to keep an eye on.</p>
+    </div>
+    <div class="holdings" id="insHoldings"></div>
+    <div class="card">
+      <h3>Things to consider this week</h3>
+      <p class="small muted">Checks against your own plan and rules. They're prompts to think about, not instructions to buy or sell.</p>
+      <div class="acts" id="insActions"></div>
+    </div>
+    <div class="card">
+      <h3>What could happen next</h3>
+      <p class="small muted">Scenarios, not predictions. Nobody can reliably predict prices. These show a range of outcomes if you keep adding £5 a day to what you have today.</p>
+      <div class="tablebox"><table id="insScen"></table></div>
+      <p class="small" id="insFall"></p>
+    </div>
+    <div class="card" id="askCard">
+      <h3>Ask Claude about your investments</h3>
+      <p class="small muted">Claude sees your holdings, plan and progress from this page and answers as a teacher. It explains and compares; it won't tell you what to buy or sell.</p>
+      <div class="chips" id="askChips"></div>
+      <div class="field"><label for="askQ">Your question</label><textarea id="askQ" rows="3" placeholder="For example: why is so much of VWRP in American companies?"></textarea></div>
+      <button class="btn" id="askBtn" type="button">Ask Claude</button>
+      <p class="small muted" id="askNote"></p>
+      <div class="answer" id="askOut" aria-live="polite" hidden></div>
+    </div>
+  </section>
 </main>
 
 <footer class="wrap">
-  <p>Education only, not regulated financial advice. Your capital is at risk. Saved to your account when signed in to Claude; otherwise saved in this browser only.</p>
+  <p>Education only, not regulated financial advice. Your capital is at risk. Progress saves to your Claude account when you're signed in (otherwise in this browser only). Trading 212 figures arrive with the weekly sync.</p>
 </footer>
 
 <script>
@@ -293,7 +356,7 @@ footer { border-top: 1px solid var(--line); padding-block: 20px 40px; color: var
   "use strict";
   var $ = function (s) { return document.querySelector(s); };
   var gbp = function (n, dp) { return "£" + Number(n).toLocaleString("en-GB", { minimumFractionDigits: dp || 0, maximumFractionDigits: dp || 0 }); };
-  var esc = function (s) { var d = document.createElement("div"); d.textContent = String(s); return d.innerHTML; };
+  var esc = function (s) { var d = document.createElement("div"); d.textContent = String(s); return d.innerHTML.replace(/"/g, "&quot;"); };
 
   /* ---------- content ---------- */
   var PHASES = [
@@ -318,7 +381,8 @@ footer { border-top: 1px solid var(--line); padding-block: 20px 40px; color: var
         ["a1", "Create a Pie. Starter option: 100% Vanguard FTSE All-World (ticker VWRP), about 3,700 companies in one fund. The 20% explore slice comes later, once I've done lesson 11."],
         ["a2", "Turn on AutoInvest (recurring investment) on the Pie: Daily, £5, paid from my Invest account cash balance."],
         ["a3", "Turn on dividend reinvestment for the Pie (VWRP reinvests automatically anyway, as an accumulating fund)."],
-        ["a4", "Log my first check-in here so I have a starting point."]
+        ["a4", "Log my first check-in here so I have a starting point."],
+        ["a5", "Optional: connect Trading 212 so this page fills itself in each week (see the Insights tab)."]
       ] },
     { id: "p4", when: "Months 1 to 3", title: "Learn while it runs",
       body: "Your money is working; now your knowledge catches up. Don't change anything in the Pie during this stage.",
@@ -370,6 +434,7 @@ footer { border-top: 1px solid var(--line); padding-block: 20px 40px; color: var
 
   /* ---------- state + persistence ---------- */
   var state = { checks: {}, lessons: {}, pie: STARTER.slice(), checkins: [] };
+  var remote = { portfolio: null, insights: null };
   var store = null; // {load, save}
   var saveTimer = null, saving = false, dirty = false;
   var LS_KEY = "fiver-a-day-v1";
@@ -420,21 +485,25 @@ footer { border-top: 1px solid var(--line); padding-block: 20px 40px; color: var
       if (!db || !user) return null;
       return user.id().then(function (id) {
         if (!id) return null;
-        var ref = db.doc("data/users/" + id + "/notebook");
+        // notebook/main is owner-only (see the db rules), so the weekly sync can back it up
+        var ref = db.doc("notebook/main"), legacy = db.doc("data/users/" + id + "/notebook");
         return ref.get().then(function (snap) {
           store = {
             kind: "account",
             save: function (s) { return ref.set(s); }
           };
-          if (snap.exists) { mergeLoaded(snap.data()); renderAll(); setSaveState("Saved to your account"); }
-          else { queueSave(); } // move any browser progress into the account
+          if (snap.exists) { mergeLoaded(snap.data()); renderAll(); setSaveState("Saved to your account"); return; }
+          return legacy.get().then(function (old) {
+            if (old.exists) { mergeLoaded(old.data()); renderAll(); }
+            queueSave(); // move earlier progress into the account
+          });
         });
       });
     }).catch(function () { /* stay on browser storage */ });
   }
 
   /* ---------- tabs ---------- */
-  var TABS = ["plan", "learn", "grow", "portfolio"];
+  var TABS = ["plan", "learn", "grow", "portfolio", "insights"];
   function showTab(name) {
     if (TABS.indexOf(name) < 0) name = "plan";
     TABS.forEach(function (t) {
@@ -600,7 +669,9 @@ footer { border-top: 1px solid var(--line); padding-block: 20px 40px; color: var
   $("#resetPie").addEventListener("click", function () { state.pie = STARTER.map(function (p) { return Object.assign({}, p); }); renderPie(); queueSave(); });
 
   function renderCheckins() {
-    var c = state.checkins.slice().sort(function (a, b) { return a.date < b.date ? -1 : 1; });
+    var auto = remote.portfolio ? (remote.portfolio.history || []).map(function (h) { return { id: "t212-" + h.date, date: h.date, paid: +h.paid || 0, value: +h.value || 0, auto: true }; }) : [];
+    var autoDates = auto.map(function (r) { return r.date; });
+    var c = state.checkins.filter(function (r) { return autoDates.indexOf(r.date) < 0; }).concat(auto).sort(function (a, b) { return a.date < b.date ? -1 : 1; });
     if (!c.length) {
       $("#ciOut").innerHTML = '<div class="empty"><b>No check-ins yet</b><span class="small">Once a week, open Trading 212, note your Invest account\'s total deposits and current value, and log them above. Your chart of money paid in versus value will build up here.</span></div>';
       return;
@@ -615,7 +686,7 @@ footer { border-top: 1px solid var(--line); padding-block: 20px 40px; color: var
     html += '<div class="tablebox"><table><thead><tr><th>Date</th><th>Paid in</th><th>Value</th><th>Gain</th><th></th></tr></thead><tbody>' +
       c.slice().reverse().map(function (r) {
         var g = r.value - r.paid;
-        return '<tr><td>' + new Date(r.date + "T00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) + '</td><td>' + gbp(r.paid, 2) + '</td><td>' + gbp(r.value, 2) + '</td><td style="color:' + (g >= 0 ? "var(--good)" : "var(--bad)") + '">' + (g >= 0 ? "+" : "−") + gbp(Math.abs(g), 2) + '</td><td><button class="x" data-ci="' + esc(r.id) + '" aria-label="Delete check-in">×</button></td></tr>';
+        return '<tr><td>' + new Date(r.date + "T00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) + '</td><td>' + gbp(r.paid, 2) + '</td><td>' + gbp(r.value, 2) + '</td><td style="color:' + (g >= 0 ? "var(--good)" : "var(--bad)") + '">' + (g >= 0 ? "+" : "−") + gbp(Math.abs(g), 2) + '</td><td>' + (r.auto ? '<span class="src-tag">T212</span>' : '<button class="x" data-ci="' + esc(r.id) + '" aria-label="Delete check-in">×</button>') + '</td></tr>';
       }).join("") + '</tbody></table></div>';
     $("#ciOut").innerHTML = html;
     if (c.length >= 2) {
@@ -646,7 +717,200 @@ footer { border-top: 1px solid var(--line); padding-block: 20px 40px; color: var
     renderCheckins(); queueSave();
   });
 
-  function renderAll() { renderPlan(); renderLessons(); renderPie(); renderCheckins(); }
+  function renderAll() { renderPlan(); renderLessons(); renderPie(); renderCheckins(); renderInsights(); }
+
+  /* ---------- insights ---------- */
+  var PROFILES = {
+    VWRP: { isin: "IE00BK5BQT80", core: true, kind: "Global index fund (ETF)", what: "Owns about 3,700 large and medium-sized companies in around 50 countries, all in one fund.", inside: "Roughly 60% United States, then Japan, the UK, China and Europe. The biggest holdings are giant tech firms such as Apple, Microsoft and Nvidia.", cost: "About 0.2% a year", income: "Accumulating: dividends are reinvested for you", watch: "It's weighted towards the US and big tech, so a tech slump hits it hard. It moves with the whole world's stock market, so 20%+ falls happen." },
+    VWRL: { isin: "IE00B3RBWM25", core: true, kind: "Global index fund (ETF)", what: "The same fund as VWRP (about 3,700 companies worldwide), but it pays dividends out as cash.", inside: "Roughly 60% United States, then Japan, the UK, China and Europe.", cost: "About 0.2% a year", income: "Distributing: dividends are paid to you as cash", watch: "Dividends land as cash, so reinvest them or they sit idle. Same market risk as VWRP." },
+    VUAG: { isin: "IE00BFMXXD54", core: true, kind: "US index fund (ETF)", what: "Owns the 500 biggest US companies (the S&P 500).", inside: "Only US companies. About a third is big tech.", cost: "About 0.07% a year", income: "Accumulating", watch: "No UK, European or Asian companies. Overlaps heavily with a global fund such as VWRP." },
+    VUSA: { isin: "IE00B3XXRP09", core: true, kind: "US index fund (ETF)", what: "Owns the 500 biggest US companies (the S&P 500) and pays dividends out.", inside: "Only US companies. About a third is big tech.", cost: "About 0.07% a year", income: "Distributing", watch: "Only one country. Overlaps heavily with a global fund." },
+    CSP1: { isin: "IE00B5BMR087", core: true, kind: "US index fund (ETF)", what: "iShares' S&P 500 fund: the 500 biggest US companies.", inside: "Only US companies. About a third is big tech.", cost: "About 0.07% a year", income: "Accumulating", watch: "Only one country. Overlaps heavily with a global fund." },
+    SWDA: { isin: "IE00B4L5Y983", core: true, kind: "Developed-world index fund (ETF)", what: "Owns about 1,400 companies in 23 developed countries.", inside: "Around 70% US. No emerging markets such as China or India.", cost: "About 0.2% a year", income: "Accumulating", watch: "Leaves out emerging markets and leans even more on the US than VWRP." }
+  };
+  var SINGLE = { core: false, kind: "Single company share", what: "A slice of one business. Its price depends on how that one company does.", inside: "Just this company.", cost: "No yearly fee; 0.15% FX fee if priced in dollars or euros, or 0.5% stamp duty on UK shares", income: "Any dividends are paid as cash", watch: "One company can fall 50% or more on bad news. Keep it inside your 20% explore slice and know why you own it (lesson 11)." };
+
+  function profileFor(h) {
+    var byIsin = Object.keys(PROFILES).filter(function (k) { return h.isin && PROFILES[k].isin === h.isin; })[0];
+    if (byIsin) return { key: byIsin, p: PROFILES[byIsin] };
+    var raw = String(h.ticker || "").split("_")[0].replace(/l$/, "").toUpperCase();
+    var paren = /\(([A-Z0-9]{3,5})\)/.exec(h.name || "");
+    var k = PROFILES[raw] ? raw : paren && PROFILES[paren[1]] ? paren[1] : null;
+    return k ? { key: k, p: PROFILES[k] } : { key: null, p: SINGLE };
+  }
+
+  function loadRemote() {
+    var get = function (u) { return fetch(u, { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }); };
+    Promise.all([get("portfolio.json"), get("insights.json")]).then(function (r) {
+      remote.portfolio = r[0] && r[0].source === "trading212" ? r[0] : null;
+      remote.insights = r[1] && r[1].date ? r[1] : null;
+      renderCheckins(); renderInsights();
+    });
+  }
+
+  function currentView() {
+    var P = remote.portfolio;
+    if (P) {
+      var a = P.account || {};
+      return {
+        source: "t212", updated: (P.updatedAt || "").slice(0, 10), paid: +P.paidIn || 0, value: +a.totalValue || 0,
+        invested: +a.investedValue || 0, cash: a.cashAvailable, divTY: P.dividends ? +P.dividends.taxYearTotal || 0 : null,
+        holdings: (P.holdings || []).map(function (h) { return { name: h.name || h.ticker, ticker: h.ticker, isin: h.isin, currency: h.currency, value: +h.value || 0, gain: h.gain, cost: h.cost, since: h.since }; })
+      };
+    }
+    var c = state.checkins.slice().sort(function (x, y) { return x.date < y.date ? -1 : 1; }).pop();
+    var v = c ? c.value : null;
+    return {
+      source: "manual", updated: c ? c.date : null, paid: c ? c.paid : null, value: v, invested: v, cash: null, divTY: null,
+      holdings: state.pie.filter(function (p) { return (+p.target || 0) > 0 && p.name; }).map(function (p) { return { name: p.name, target: +p.target, value: v != null ? v * p.target / 100 : null, estimated: true }; })
+    };
+  }
+
+  function grow(start, years, rate) {
+    var r = Math.pow(1 + rate, 1 / 12) - 1, m = 1825 / 12, v = start;
+    for (var i = 0; i < years * 12; i++) v = v * (1 + r) + m;
+    return v;
+  }
+
+  function buildActions(V) {
+    var out = [], push = function (level, title, body) { out.push({ level: level, title: title, body: body }); };
+    var daysSince = V.updated ? Math.floor((Date.now() - Date.parse(V.updated)) / 864e5) : null;
+    if (V.value == null) push("act-now", "Log your first check-in", "Open the My portfolio tab and enter what you've paid in and what your Pie is worth. Everything on this page builds from that.");
+    else if (V.source === "manual" && daysSince > 9) push("act-now", "Log this week's check-in", "Your last check-in was " + daysSince + " days ago. Two numbers from Trading 212 and you're done.");
+
+    if (V.value != null && V.paid) {
+      var g = V.value - V.paid, pct = g / V.paid * 100;
+      if (g < 0) push("heads", "You're down " + Math.abs(pct).toFixed(1) + "% on what you've paid in", "That's normal and expected at times. Your £5 a day is buying more units while prices are lower. Rule 1: keep going. Selling now would turn a temporary dip into a real loss.");
+      else push("good", "You're up " + pct.toFixed(1) + "% on what you've paid in", "Nice, but a good run is no reason to change the plan or put in more than you can leave alone for 5+ years. Next month could be red; that's fine too.");
+    }
+
+    var inv = V.holdings.reduce(function (s, h) { return s + (h.value || 0); }, 0);
+    var explore = V.holdings.filter(function (h) { return !profileFor(h).p.core; });
+    var exploreVal = explore.reduce(function (s, h) { return s + (h.value || 0); }, 0);
+    var explorePct = inv ? exploreVal / inv * 100 : explore.reduce(function (s, h) { return s + (h.target || 0); }, 0);
+    if (explorePct > 25) push("heads", "Your explore slice is " + Math.round(explorePct) + "% of your investments", "Your plan caps individual companies at 20%. You don't have to sell to fix it: Pies send new money towards slices below target, so the gap closes over time. Selling a winner in an Invest account is tax-free only while your yearly profits from sales stay under £3,000.");
+    else if (!explore.length && state.lessons.L11) push("heads", "You've done lesson 11 and your Pie is all core", "If you want to, choose one company you understand and give it up to 20%. Write down one sentence on why you own it before buying.");
+    else if (!explore.length) push("good", "Your Pie is 100% core", "That's a strong default. Finish lesson 11 before picking a company for your explore slice.");
+    else push("good", "Explore slice at " + Math.round(explorePct) + "%", (explorePct > 20 ? "A little over your 20% target, which happens as prices move. No action needed unless it passes 25%. " : "Within your 20% limit. ") + "Check whether the reason you bought " + esc(explore[0].name) + " still holds; ignore day-to-day price moves.");
+
+    if (V.source === "t212" && V.cash != null) {
+      if (V.cash < 35) push("act-now", "Cash is low: " + gbp(V.cash, 2), "That's less than a week of AutoInvest. Top up by bank transfer so the daily £5 doesn't skip.");
+      else if (V.cash > 300) push("heads", gbp(V.cash, 2) + " is sitting in cash", "It earns a little interest but isn't invested. A month or two of AutoInvest money (about £150 to £300) is a sensible buffer.");
+    }
+    if (V.divTY != null) {
+      if (V.divTY > 400) push("heads", "Dividends this tax year: " + gbp(V.divTY, 2), "You're close to the £500 tax-free dividend allowance. Remember that VWRP's reinvested dividends also count. Keep your yearly statement.");
+      else push("good", "Dividends this tax year: " + gbp(V.divTY, 2) + " of £500 tax-free", "Well within the allowance, so no tax to think about yet.");
+    }
+    V.holdings.filter(function (h) { return h.currency && h.currency !== "GBP" && h.currency !== "GBX"; }).forEach(function (h) {
+      push("heads", esc(h.name) + " is priced in " + esc(h.currency), "Each buy pays Trading 212's 0.15% currency fee, and its value in pounds moves with the exchange rate as well as the share price.");
+    });
+    var next = LESSONS.map(function (l, i) { return { l: l, i: i }; }).filter(function (x) { return !state.lessons["L" + (x.i + 1)]; })[0];
+    if (next) push("good", "Next lesson: " + (next.i + 1) + ". " + next.l.t, "One lesson every few days is plenty. Find it in the Learn tab.");
+    if (new Date().getMonth() === 3) push("heads", "It's April: new tax year", "Download Trading 212's yearly statement for your records and review whether you can raise your daily amount.");
+    return out;
+  }
+
+  function renderInsights() {
+    var V = currentView();
+    $("#insSource").textContent = V.source === "t212"
+      ? "From your Trading 212 account, last synced " + new Date(V.updated + "T00:00").toLocaleDateString("en-GB", { day: "numeric", month: "long" }) + "."
+      : V.updated ? "Estimated from your Pie and your latest check-in (" + new Date(V.updated + "T00:00").toLocaleDateString("en-GB", { day: "numeric", month: "long" }) + "). Once Trading 212 is connected, this fills in by itself."
+      : "Log a check-in in My portfolio to fill this in, or connect Trading 212 so it fills in by itself.";
+
+    var W = remote.insights;
+    $("#insWeekly").innerHTML = W ? '<div class="callout green"><span class="eyebrow">Claude\'s notes · week of ' + esc(W.date) + '</span><p>' + esc(W.summary || "") + '</p>' +
+      (Array.isArray(W.learn) && W.learn.length ? '<ul style="margin:0;padding-left:1.2em">' + W.learn.map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + "</ul>" : "") + "</div>" : "";
+
+    var g = V.value != null && V.paid != null ? V.value - V.paid : null;
+    $("#insSummary").innerHTML = '<div><span class="eyebrow">Paid in</span><b>' + (V.paid != null ? gbp(V.paid, 2) : "–") + '</b></div>' +
+      '<div class="grow"><span class="eyebrow">Gain / loss</span><b style="color:' + (g == null || g >= 0 ? "var(--good)" : "var(--bad)") + '">' + (g == null ? "–" : (g >= 0 ? "+" : "−") + gbp(Math.abs(g), 2)) + '</b></div>' +
+      '<div><span class="eyebrow">Worth now</span><b>' + (V.value != null ? gbp(V.value, 2) : "–") + '</b></div>';
+
+    var inv = V.holdings.reduce(function (s, h) { return s + (h.value || 0); }, 0);
+    var notes = (W && W.holdings) || {};
+    $("#insHoldings").innerHTML = V.holdings.length ? V.holdings.map(function (h) {
+      var pr = profileFor(h), p = pr.p, share = inv ? h.value / inv * 100 : h.target;
+      var note = notes[h.ticker] || notes[pr.key] || notes[h.name];
+      var gainTxt = h.gain != null ? '<dt>Gain</dt><dd class="num" style="color:' + (h.gain >= 0 ? "var(--good)" : "var(--bad)") + '">' + (h.gain >= 0 ? "+" : "−") + gbp(Math.abs(h.gain), 2) + (h.cost ? " (" + (h.gain / h.cost * 100).toFixed(1) + "%)" : "") + "</dd>" : "";
+      return '<div class="card"><div class="hold-head"><h3>' + esc(h.name) + '</h3><span class="num">' + (h.value != null ? (h.estimated ? "≈" : "") + gbp(h.value, 2) : "") + '</span></div>' +
+        '<span class="eyebrow">' + p.kind + (share != null && !isNaN(share) ? " · " + Math.round(share) + "% of your investments" : "") + (p.core ? " · core" : " · explore") + '</span>' +
+        '<dl class="kv"><dt>What it is</dt><dd>' + p.what + '</dd><dt>Inside</dt><dd>' + p.inside + '</dd><dt>Cost</dt><dd>' + p.cost + '</dd><dt>Income</dt><dd>' + p.income + '</dd>' + gainTxt +
+        (h.since ? '<dt>Held since</dt><dd>' + new Date(h.since + "T00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) + '</dd>' : "") +
+        '<dt>Watch for</dt><dd>' + p.watch + '</dd></dl>' +
+        (note ? '<p class="small"><b>This week:</b> ' + esc(note) + '</p>' : "") +
+        '<button class="chip-btn" type="button" data-ask="Explain ' + esc(h.name) + ' to me as a beginner: what the business or fund does, what drives its price, and the main risks of holding it.">Ask Claude about this</button></div>';
+    }).join("") : '<div class="empty"><b>Nothing to explain yet</b><span class="small">Add your slices in My portfolio, or connect Trading 212.</span></div>';
+
+    $("#insActions").innerHTML = buildActions(V).map(function (a) {
+      var label = a.level === "good" ? "On track" : a.level === "heads" ? "Heads up" : "To do";
+      return '<div class="act"><span class="pill ' + a.level + '">' + label + '</span><div><b>' + a.title + '</b><span class="small">' + a.body + '</span></div></div>';
+    }).join("");
+
+    var start = V.value || 0;
+    var paidNow = V.paid || 0;
+    $("#insScen").innerHTML = "<thead><tr><th>In</th><th>Weak (2%/yr)</th><th>Middle (6%/yr)</th><th>Strong (9%/yr)</th><th>Paid in by then</th></tr></thead><tbody>" +
+      [1, 5, 10, 20].map(function (y) {
+        return "<tr><td>" + y + (y === 1 ? " year" : " years") + "</td><td>" + gbp(grow(start, y, 0.02)) + "</td><td>" + gbp(grow(start, y, 0.06)) + "</td><td>" + gbp(grow(start, y, 0.09)) + "</td><td>" + gbp(paidNow + 1825 * y) + "</td></tr>";
+      }).join("") + "</tbody>";
+    $("#insFall").textContent = start
+      ? "If markets fell 30% tomorrow, as they did in 2008 and briefly in 2020, your " + gbp(start) + " would show about " + gbp(start * 0.7) + ". Past falls in global shares took from a few months to about five years to recover, with no guarantee next time. Your daily £5 would keep buying cheaply throughout."
+      : "Once you have a value logged, this shows what a big market fall would look like in pounds.";
+  }
+
+  /* ---------- ask Claude ---------- */
+  var askFn = null, asking = false;
+  var PRESETS = [
+    "Explain what I own in plain English",
+    "What would a 30% market fall mean for me, and what should I do?",
+    "Am I on track with my plan?",
+    "What should I learn next, given my progress?",
+    "How do I research a company for my explore slice?"
+  ];
+  function initAsk() {
+    $("#askChips").innerHTML = PRESETS.map(function (q) { return '<button class="chip-btn" type="button" data-ask="' + esc(q) + '">' + esc(q) + '</button>'; }).join("");
+    $("#askBtn").disabled = true;
+    $("#askNote").textContent = "Connecting to Claude…";
+    var use = window.claude && window.claude.use ? window.claude.use("sample") : Promise.resolve(null);
+    use.then(function (s) {
+      askFn = s;
+      $("#askBtn").disabled = !s;
+      $("#askNote").textContent = s ? "" : "Ask Claude works when you open this page in Claude while signed in.";
+    }, function () { $("#askNote").textContent = "Ask Claude isn't available in this view."; });
+  }
+  function ask(q) {
+    q = (q || "").trim();
+    if (!q || !askFn || asking) return;
+    var V = currentView(), out = $("#askOut");
+    var ctx = {
+      plan: "UK beginner investing £5 a day via Trading 212 AutoInvest in a taxable Invest (general investment) account, because their ISA allowance is used by a separately managed ISA. Target: about 80% core global index fund (VWRP), up to 20% explore slice in individual companies. Long time horizon, no debt.",
+      rules: ["Keep investing daily whatever the news", "Only money not needed for 5+ years", "80%+ in cheap global index fund", "Check in weekly then close the app", "Never sell because prices dropped", "Raise the daily amount with pay rises"],
+      today: new Date().toISOString().slice(0, 10),
+      portfolio: V, pieTargets: state.pie,
+      lessonsDone: LESSONS.filter(function (l, i) { return state.lessons["L" + (i + 1)]; }).map(function (l) { return l.t; }),
+      lessonsToDo: LESSONS.filter(function (l, i) { return !state.lessons["L" + (i + 1)]; }).map(function (l) { return l.t; }),
+      weeklyNotes: remote.insights || null
+    };
+    var prompt = "You are a patient investing teacher for a UK beginner. Use their real data below to make the lesson concrete.\n" +
+      "Rules: education only, not personal financial advice. Don't tell them to buy or sell a specific investment; you may explain options, trade-offs and how each relates to their own plan rules. " +
+      "Don't predict prices. Talk about ranges, history and probabilities instead. Use UK context (general investment account, £3,000 capital gains allowance, £500 dividend allowance, FSCS). " +
+      "Plain English, short paragraphs, no markdown headings or tables, under 220 words. Finish with one short line starting 'Learn next:' pointing to a concept or lesson.\n\n" +
+      "Their data (JSON):\n" + JSON.stringify(ctx) + "\n\nQuestion: " + q;
+    asking = true; $("#askBtn").disabled = true; out.hidden = false; out.textContent = "Thinking…";
+    askFn(prompt, { onText: function (e) { out.textContent = e.text; }, cache: false }).then(function (r) {
+      out.textContent = r.text;
+    }, function (e) {
+      out.textContent = e && e.code === "rate_limited" ? "That's a lot of questions in a row. Wait a minute and try again."
+        : e && e.code === "not_granted" ? "Claude access for this page was declined. You can allow it from the page's Permissions menu."
+        : (e && e.text) || "Claude couldn't answer just now. Try again in a moment.";
+    }).then(function () { asking = false; $("#askBtn").disabled = false; });
+  }
+  $("#askBtn").addEventListener("click", function () { ask($("#askQ").value); });
+  document.addEventListener("click", function (e) {
+    var b = e.target.closest("[data-ask]"); if (!b) return;
+    $("#askQ").value = b.dataset.ask;
+    if (!$("#insights").hidden) $("#askCard").scrollIntoView({ behavior: "smooth", block: "start" });
+    ask(b.dataset.ask);
+  });
 
   /* ---------- boot ---------- */
   $("#ciDate").value = new Date().toISOString().slice(0, 10);
@@ -655,5 +919,7 @@ footer { border-top: 1px solid var(--line); padding-block: 20px 40px; color: var
   showTab(start);
   renderAll(); renderCalc();
   initStore();
+  loadRemote();
+  initAsk();
 })();
 </script>
