@@ -1,3 +1,11 @@
+# Investing
+
+Two things live here:
+
+- **`web/`** – Groundwork, an investing education app (Next.js + Supabase + Claude). Start with
+  [`docs/PLAN.md`](docs/PLAN.md) for the product plan and [`web/README.md`](web/README.md) to run it.
+- **Fiver a Day** – a personal notebook page and Trading 212 sync, described below.
+
 # Fiver a Day
 
 A beginner's investing notebook for putting £5 a day into a Trading 212 Invest account.

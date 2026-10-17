@@ -1,0 +1,9 @@
+Action,Time,ISIN,Ticker,Name,No. of shares,Price / share,Currency (Price / share),Exchange rate,Result,Currency (Result),Total,Currency (Total),Withholding tax,Currency (Withholding tax),ID
+Deposit,2026-01-02 09:00:00,,,,,,,,,,500.00,GBP,,,dep-1
+Market buy,2026-01-05 10:00:00,IEFAKE000001,FAKEW,"Fictional World Index Fund (Acc)",2,100.00,GBP,1.00,,,200.00,GBP,,,buy-1
+Market buy,2026-02-05 10:00:00,IEFAKE000001,FAKEW,"Fictional World Index Fund (Acc)",1,110.00,GBP,1.00,,,110.00,GBP,,,buy-2
+Market buy,2026-02-10 15:00:00,USFAKE000002,FAKE,"Fictional Gadgets, Inc.",0.5,200.00,USD,1.25,,,80.50,GBP,,,buy-3
+Market sell,2026-03-01 11:00:00,IEFAKE000001,FAKEW,"Fictional World Index Fund (Acc)",1,120.00,GBP,1.00,16.67,GBP,120.00,GBP,,,sell-1
+Dividend (Dividend),2026-03-15 08:00:00,USFAKE000002,FAKE,"Fictional Gadgets, Inc.",0.5,0.24,USD,1.25,,,0.10,GBP,0.02,USD,
+Market buy,2026-02-05 10:00:00,IEFAKE000001,FAKEW,"Fictional World Index Fund (Acc)",1,110.00,GBP,1.00,,,110.00,GBP,,,buy-2
+Mystery action,2026-03-20 08:00:00,,,,,,,,,,1.00,GBP,,,odd-1
