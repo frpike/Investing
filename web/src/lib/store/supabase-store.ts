@@ -81,7 +81,7 @@ export class SupabaseStore implements Store {
 
   async load(): Promise<AppData> {
     const uid = this.userId;
-    const [profile, prefs, diag, progress, attempts, concepts, portfolios, imports] = await Promise.all([
+    const [profile, prefs, diag, progress, attempts, concepts, portfolios, imports, snaps] = await Promise.all([
       this.db.from("profiles").select("display_name, tutor_topics, activity_days").eq("user_id", uid).maybeSingle(),
       this.db.from("learning_preferences").select("*").eq("user_id", uid).maybeSingle(),
       this.db.from("diagnostic_results").select("*").eq("user_id", uid).order("taken_at", { ascending: false }).limit(1).maybeSingle(),
@@ -90,6 +90,7 @@ export class SupabaseStore implements Store {
       this.db.from("concept_mastery").select("*").eq("user_id", uid),
       this.db.from("portfolios").select("*").eq("user_id", uid).eq("kind", "manual").order("created_at").limit(1),
       this.db.from("import_jobs").select("*").eq("user_id", uid).order("created_at").limit(100),
+      this.db.from("portfolio_snapshots").select("*").eq("user_id", uid).order("taken_at", { ascending: false }).limit(1000),
     ]);
     const data = emptyData();
     const p = must(profile) as Row | null;
@@ -124,6 +125,14 @@ export class SupabaseStore implements Store {
       at: r.created_at as string, rowsTotal: Number(r.rows_total), rowsImported: Number(r.rows_imported), rowsRejected: Number(r.rows_rejected),
       errors: (r.errors as { row: number; message: string }[]) ?? [],
     }));
+    data.snapshots = (must(snaps) as Row[]).reverse().map((r) => {
+      const d = (r.detail as Record<string, unknown>) ?? {};
+      return {
+        id: r.id as string, takenAt: r.taken_at as string, source: "api_trading212" as const,
+        environment: (d.environment as "live" | "demo") ?? "live", totalValue: num(r.total_value_base), invested: num(r.invested_base),
+        cash: num(d.cash), historyComplete: Boolean(d.historyComplete),
+      };
+    });
     return data;
   }
 
@@ -148,6 +157,15 @@ export class SupabaseStore implements Store {
       }
       case "lessonStarted":
         return this.saveLesson(change.lessonId, next);
+      case "brokerSync": {
+        await this.savePortfolio(next.portfolio, prev.portfolio);
+        const s = change.snapshot;
+        must(await this.db.from("portfolio_snapshots").insert({
+          id: s.id, user_id: uid, portfolio_id: next.portfolio!.id, taken_at: s.takenAt, total_value_base: s.totalValue,
+          invested_base: s.invested, source_id: "api_trading212", detail: { environment: s.environment, cash: s.cash, historyComplete: s.historyComplete },
+        }));
+        return;
+      }
       case "portfolio":
       case "import":
         await this.savePortfolio(next.portfolio, prev.portfolio);

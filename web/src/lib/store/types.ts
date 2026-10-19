@@ -13,6 +13,17 @@ export interface ImportLogEntry {
   errors: { row: number; message: string }[];
 }
 
+export interface SnapshotEntry {
+  id: string;
+  takenAt: string;
+  source: "api_trading212";
+  environment: "live" | "demo";
+  totalValue: number | null;
+  invested: number | null;
+  cash: number | null;
+  historyComplete: boolean;
+}
+
 export interface AppData {
   version: 1;
   profile: { displayName: string | null };
@@ -26,6 +37,8 @@ export interface AppData {
   /** The learner's manual / imported portfolio. Practice portfolios are kept separately (Phase 3). */
   portfolio: Portfolio | null;
   imports: ImportLogEntry[];
+  /** Point-in-time account values from Trading 212 syncs, oldest first. */
+  snapshots: SnapshotEntry[];
   tutorTopics: Record<string, number>;
   /** YYYY-MM-DD, sorted, unique. */
   activityDays: string[];
@@ -39,6 +52,7 @@ export type Change =
   | { type: "lessonStarted"; lessonId: string }
   | { type: "portfolio" }
   | { type: "import"; entry: ImportLogEntry }
+  | { type: "brokerSync"; snapshot: SnapshotEntry }
   | { type: "activity" }
   | { type: "tutorTopics" };
 
@@ -63,6 +77,7 @@ export const emptyData = (): AppData => ({
   concepts: {},
   portfolio: null,
   imports: [],
+  snapshots: [],
   tutorTopics: {},
   activityDays: [],
 });

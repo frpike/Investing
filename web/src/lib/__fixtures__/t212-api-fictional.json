@@ -1,0 +1,14 @@
+{
+  "summary": { "currency": "GBP", "totalValue": 412.5, "cash": { "availableToTrade": 22.5, "inPies": 0, "reservedForOrders": 0 }, "investments": { "currentValue": 390, "totalCost": 370, "realizedProfitLoss": 4.2, "unrealizedProfitLoss": 20 } },
+  "positions": [
+    { "averagePricePaid": 9800, "createdAt": "2026-08-01T09:00:00Z", "currentPrice": 10000, "quantity": 3, "instrument": { "currency": "GBX", "isin": "IEFAKE000001", "name": "Fictional World Index Fund (Acc)", "ticker": "FAKEWl_EQ" }, "walletImpact": { "currency": "GBP", "currentValue": 300, "totalCost": 294, "unrealizedProfitLoss": 6, "fxImpact": null } },
+    { "averagePricePaid": 95, "createdAt": "2026-09-01T09:00:00Z", "currentPrice": 112.5, "quantity": 1, "instrument": { "currency": "USD", "isin": "USFAKE000002", "name": "Fictional Gadgets, Inc.", "ticker": "FAKE_US_EQ" }, "walletImpact": { "currency": "GBP", "currentValue": 90, "totalCost": 76, "unrealizedProfitLoss": 14, "fxImpact": 1.1 } }
+  ],
+  "transactions": [
+    { "items": [ { "amount": 300, "currency": "GBP", "dateTime": "2026-08-01T08:00:00Z", "reference": "dep-1", "type": "DEPOSIT" } ], "nextPagePath": "/api/v0/equity/history/transactions?limit=50&cursor=abc" },
+    { "items": [ { "amount": 100, "currency": "GBP", "dateTime": "2026-09-01T08:00:00Z", "reference": "dep-2", "type": "DEPOSIT" }, { "amount": 0.12, "currency": "GBP", "dateTime": "2026-09-30T08:00:00Z", "reference": "int-1", "type": "INTEREST_ON_FREE_CASH" } ], "nextPagePath": null }
+  ],
+  "dividends": [
+    { "items": [ { "amount": 0.08, "currency": "GBP", "paidOn": "2026-09-15T00:00:00Z", "reference": "div-1", "ticker": "FAKE_US_EQ", "quantity": 1, "instrument": { "name": "Fictional Gadgets, Inc.", "isin": "USFAKE000002", "ticker": "FAKE_US_EQ" } } ], "nextPagePath": null }
+  ]
+}

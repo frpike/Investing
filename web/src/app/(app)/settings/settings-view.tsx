@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useApp } from "@/components/app-state";
-import { Badge } from "@/components/ui/badge";
+import { Trading212Sync } from "@/components/portfolio/trading212-sync";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -64,10 +64,8 @@ export function SettingsView() {
       <Card>
         <CardHeader><CardTitle className="text-lg">Broker connections</CardTitle></CardHeader>
         <CardContent className="space-y-3 text-sm">
-          <div className="flex items-center justify-between gap-4 rounded-lg border p-3">
-            <div><p className="font-medium">Trading 212 (direct connection)</p><p className="text-muted-foreground">Not available yet. Trading 212&apos;s API terms require their written permission for apps used by other people. We&apos;ve asked; until then, use CSV import.</p></div>
-            <Badge variant="outline">Unavailable</Badge>
-          </div>
+          <Trading212Sync />
+          <p className="text-muted-foreground">Direct connection works in personal mode only: the owner of this copy of the app connects their own account with a read-only key kept on the server. Trading 212&apos;s API terms need their written permission before it can be offered to other people. To disconnect, remove the key from the server&apos;s settings and delete it in the Trading 212 app.</p>
           <div className="flex items-center justify-between gap-4 rounded-lg border p-3">
             <div><p className="font-medium">Trading 212 CSV import</p><p className="text-muted-foreground">{data.imports.length ? `${data.imports.length} import(s), last on ${date(data.imports.at(-1)!.at)}.` : "No imports yet."} We never ask for your Trading 212 password.</p></div>
             <Button asChild size="sm" variant="outline"><Link href="/portfolio">Open</Link></Button>

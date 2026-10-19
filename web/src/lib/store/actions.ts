@@ -3,7 +3,7 @@ import { applyAnswer, emptyConcept } from "@/lib/learning/mastery";
 import { scoreByConcept, scoreQuiz, type QuizScore } from "@/lib/learning/scoring";
 import type { AttemptContext, LearningPreferences } from "@/lib/learning/types";
 import type { Holding, Portfolio } from "@/lib/portfolio/types";
-import type { AppData, Change, ImportLogEntry } from "./types";
+import type { AppData, Change, ImportLogEntry, SnapshotEntry } from "./types";
 
 // Pure state transitions. Each returns the next AppData plus a Change describing what moved,
 // which stores use to save only what changed.
@@ -134,4 +134,35 @@ export function noteTutorTopics(data: AppData, conceptIds: string[], now: Date):
   const tutorTopics = { ...data.tutorTopics };
   for (const c of conceptIds) tutorTopics[c] = (tutorTopics[c] ?? 0) + 1;
   return [withActivity({ ...data, tutorTopics }, now), { type: "tutorTopics" }];
+}
+
+/**
+ * Applies a read-only Trading 212 sync. Holdings from the account replace any holding for the
+ * same instrument (from any source), keeping the learner's own labels; holdings no longer in the
+ * account are removed if they came from an earlier sync. Transactions are de-duplicated by reference.
+ */
+export function applyBrokerSync(
+  data: AppData,
+  sync: { holdings: Holding[]; transactions: Portfolio["transactions"]; snapshot: Omit<SnapshotEntry, "id"> },
+  portfolioId: string,
+  newId: () => string,
+  now: Date,
+): [AppData, Change] {
+  const p = ensurePortfolio(data, portfolioId, now);
+  const keyOf = (h: Pick<Holding, "isin" | "ticker" | "name">) => (h.isin ?? h.ticker ?? h.name).toUpperCase();
+  const existing = new Map(p.holdings.map((h) => [keyOf(h), h]));
+  const synced = sync.holdings.map((h) => {
+    const prev = existing.get(keyOf(h));
+    return { ...h, id: prev?.id ?? newId(), assetType: prev?.assetType ?? h.assetType, sector: prev?.sector ?? h.sector, region: prev?.region ?? h.region };
+  });
+  const syncedKeys = new Set(synced.map(keyOf));
+  const kept = p.holdings.filter((h) => !syncedKeys.has(keyOf(h)) && h.source !== "api_trading212");
+  const refs = new Set(p.transactions.map((t) => t.externalRef).filter(Boolean));
+  const newTx = sync.transactions.filter((t) => !t.externalRef || !refs.has(t.externalRef)).map((t) => ({ ...t, id: newId() }));
+  const snapshot: SnapshotEntry = { ...sync.snapshot, id: newId() };
+  return [{
+    ...data,
+    portfolio: { ...p, holdings: [...kept, ...synced], transactions: [...p.transactions, ...newTx], updatedAt: now.toISOString() },
+    snapshots: [...data.snapshots, snapshot].slice(-1000),
+  }, { type: "brokerSync", snapshot }];
 }

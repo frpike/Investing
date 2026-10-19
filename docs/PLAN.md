@@ -66,6 +66,8 @@ last updated 17 October 2025.
    scopes and disconnect are all in the schema. It stays switched off behind a
    feature flag. Email Trading 212 early; their answer shapes Phase 2.
 
+The app's **personal mode** (built after this plan was written) applies the same rule: the deployment owner connects their own account with a read-only key held in server environment variables, behind an access code. It must not be switched on for a copy other people use.
+
 Your personal sync script (`sync/t212_sync.py`) is fine under clause 6.2,
 because it is your own key for your own use. It must not be offered to other users.
 

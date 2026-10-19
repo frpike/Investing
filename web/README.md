@@ -38,13 +38,32 @@ Add `ANTHROPIC_API_KEY` (server only). The tutor uses `claude-opus-5-5` by defau
 search for current information, server-side refusal fallbacks, a cached system prompt, and
 per-user hourly limits (`TUTOR_HOURLY_LIMIT`, guests `TUTOR_GUEST_HOURLY_LIMIT`).
 
+## Connect your own Trading 212 account (personal mode)
+
+For **your own account only**: Trading 212's API terms allow personal use, but offering the
+connection to other people needs their written consent.
+
+1. In the Trading 212 app, create an API key (Settings → API). Give it **read-only** permissions:
+   account, portfolio, and history (dividends, transactions). Leave orders off. Optionally restrict
+   it to your server's IP address.
+2. Add `T212_API_KEY`, `T212_API_SECRET` (if you were given one), `T212_ENV` and an
+   `T212_ACCESS_CODE` of at least 8 characters to your server's environment variables (Vercel →
+   Project → Settings → Environment Variables), then redeploy. Try `T212_ENV=demo` with a
+   paper-trading key first if you like.
+3. Open Portfolio, enter your access code and press **Sync now**. Holdings, prices at sync time,
+   costs, deposits, interest and dividends come in; each sync saves a dated snapshot.
+
+The key never reaches the browser. The server only calls read endpoints, caches results for a
+minute to respect rate limits, and locks out an address after five wrong access codes. To
+disconnect, delete the variables and revoke the key in the Trading 212 app.
+
 ## Tests
 
 | Command | What it covers |
 |---|---|
 | `npm test` | Unit tests: content validity, quiz scoring, mastery/spaced repetition, plan, portfolio maths, currency, missing data, CSV import, scenarios, tutor prompt/context/validation, rate limiting |
 | `npm run test:db` | RLS and data isolation through PostgREST against a throwaway Postgres, plus a full SupabaseStore round trip and account deletion. Needs `PGADMIN_URL` and `POSTGREST_BIN` (see `scripts/db-test.sh`) |
-| `npm run test:e2e` | Builds and drives the real app in Chromium (desktop and mobile layout) in guest mode |
+| `npm run test:e2e` | Builds and drives the real app in Chromium (desktop and mobile layout) in guest mode, including a Trading 212 sync against a fake API with fictional data |
 | `npm run typecheck`, `npm run lint` | Types and lint |
 
 All test data is fictional.

@@ -4,9 +4,10 @@ import { ChevronDown, FlaskConical, MessageCircle, Pencil, Trash2 } from "lucide
 import Link from "next/link";
 import { useState } from "react";
 import { useApp } from "@/components/app-state";
-import { EducationNote, HypotheticalBanner, InfoNote } from "@/components/notes";
+import { EducationNote, HypotheticalBanner } from "@/components/notes";
 import { CsvImport } from "@/components/portfolio/csv-import";
 import { HoldingForm } from "@/components/portfolio/holding-form";
+import { Trading212Sync } from "@/components/portfolio/trading212-sync";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -84,7 +85,7 @@ export function PortfolioView() {
         <div className="space-y-1">
           <h1 className="text-3xl font-semibold">Your portfolio</h1>
           <p className="text-sm text-muted-foreground">
-            {holdings.length ? <>Prices are ones you entered or kept from imports, not live market data. Oldest price: {date(s.oldestPriceAt)}.</> : "Add holdings by hand or import your Trading 212 history."}
+            {holdings.length ? <>Prices come from your last Trading 212 sync or were entered by you; they aren&apos;t live. Oldest price: {date(s.oldestPriceAt)}.</> : "Sync Trading 212, import a CSV export, or add holdings by hand."}
             {mode === "guest" && " Saved in this browser only."}
           </p>
         </div>
@@ -94,7 +95,7 @@ export function PortfolioView() {
         </div>
       </div>
 
-      <InfoNote title="Connecting Trading 212 directly:">Trading 212&apos;s API is in beta, and its terms require their written permission before an app like this can connect for you. Until then, CSV import is the safe way in, and we never need your password.</InfoNote>
+      <Trading212Sync />
 
       {holdings.length === 0 ? (
         <Card><CardContent className="space-y-4 pt-6">
@@ -175,7 +176,7 @@ export function PortfolioView() {
                       <tr key={h.id} className="align-top">
                         <td className="px-4 py-3">
                           <button className="text-left font-medium hover:underline" onClick={() => setOpen(open === h.id ? null : h.id)} aria-expanded={open === h.id}>{h.name}</button>
-                          <div className="mt-0.5 flex flex-wrap gap-1 text-xs text-muted-foreground">{h.ticker && <span>{h.ticker}</span>}<Badge variant="outline" className="h-4 px-1 text-[10px]">{h.source === "csv_trading212" ? "Imported" : "Manual"}</Badge></div>
+                          <div className="mt-0.5 flex flex-wrap gap-1 text-xs text-muted-foreground">{h.ticker && <span>{h.ticker}</span>}<Badge variant="outline" className="h-4 px-1 text-[10px]">{h.source === "api_trading212" ? "Synced" : h.source === "csv_trading212" ? "Imported" : "Manual"}</Badge></div>
                         </td>
                         <td className="px-4 py-3 text-right tabular">{h.quantity}</td>
                         <td className="px-4 py-3 text-right tabular">{h.lastPrice != null ? <>{money(h.lastPrice, h.instrumentCurrency)}<div className="text-xs text-muted-foreground">{date(h.lastPriceAt)}</div></> : <span className="text-muted-foreground">Unknown</span>}</td>
@@ -196,7 +197,7 @@ export function PortfolioView() {
                               <div><dt className="text-xs text-muted-foreground">Average price paid</dt><dd className="tabular">{h.avgPrice != null ? money(h.avgPrice, h.instrumentCurrency) : "Unknown"}</dd></div>
                               <div><dt className="text-xs text-muted-foreground">Share of priced holdings</dt><dd className="tabular">{pct(s.allocation.find((a) => a.id === h.id)?.weight ?? null)}</dd></div>
                               <div><dt className="text-xs text-muted-foreground">Price currency</dt><dd>{h.instrumentCurrency === "GBX" ? "GBX (pence)" : h.instrumentCurrency}</dd></div>
-                              <div><dt className="text-xs text-muted-foreground">Data source</dt><dd>{h.source === "csv_trading212" ? "Trading 212 CSV import" : "Entered by you"}{h.lastPriceSource === "user_price" ? "; price entered by you" : ""}</dd></div>
+                              <div><dt className="text-xs text-muted-foreground">Data source</dt><dd>{h.source === "api_trading212" ? "Trading 212 sync (read-only)" : h.source === "csv_trading212" ? "Trading 212 CSV import" : "Entered by you"}{h.lastPriceSource === "user_price" ? "; price entered by you" : h.lastPriceSource === "api_trading212" ? "; price from Trading 212 at sync time" : ""}</dd></div>
                               <div><dt className="text-xs text-muted-foreground">Transactions on file</dt><dd className="tabular">{txs.length}</dd></div>
                             </dl>
                             {g != null && c != null && c > 0 && (

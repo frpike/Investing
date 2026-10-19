@@ -7,7 +7,7 @@ import { SignJWT } from "jose";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { getLesson } from "@/content";
 import { contentRows } from "@/lib/content-sync";
-import { recordQuiz, setPrefs, upsertHolding, applyImport } from "@/lib/store/actions";
+import { recordQuiz, setPrefs, upsertHolding, applyImport, applyBrokerSync } from "@/lib/store/actions";
 import { SupabaseStore } from "@/lib/store/supabase-store";
 import { emptyData } from "@/lib/store/types";
 import { importTrading212Csv } from "@/lib/portfolio/import-trading212";
@@ -99,6 +99,19 @@ describe("SupabaseStore", () => {
     const [again, ch2] = applyImport(reloaded, parsed, { id: randomUUID(), source: "csv_trading212", fileName: "fictional.csv", fileSha256: null, at: now.toISOString(), rowsTotal: 0, rowsImported: 0, rowsRejected: 0, errors: [] }, reloaded.portfolio!.id, randomUUID, now);
     await store.save(again, ch2, prev);
     expect((await store.load()).portfolio!.transactions).toHaveLength(parsed.rowsImported);
+
+    // A Trading 212 sync (fictional, already normalised) saves holdings and a snapshot.
+    const synced = await store.load();
+    const [afterSync, ch3] = applyBrokerSync(synced, {
+      holdings: [{ id: "x", name: "Fictional Synced Fund", ticker: "SYNC", isin: null, assetType: null, sector: null, region: null, quantity: 2,
+        instrumentCurrency: "GBP", avgPrice: 50, costBasisBase: 100, lastPrice: 55, lastPriceAt: now.toISOString(), lastPriceSource: "api_trading212", fxRateToBase: null, source: "api_trading212" }],
+      transactions: [],
+      snapshot: { takenAt: now.toISOString(), source: "api_trading212", environment: "demo", totalValue: 500, invested: 400, cash: 12.5, historyComplete: true },
+    }, synced.portfolio!.id, randomUUID, now);
+    await store.save(afterSync, ch3, synced);
+    const withSync = await store.load();
+    expect(withSync.snapshots).toEqual([expect.objectContaining({ totalValue: 500, invested: 400, cash: 12.5, environment: "demo", historyComplete: true })]);
+    expect(withSync.portfolio!.holdings.find((h) => h.ticker === "SYNC")!.lastPriceSource).toBe("api_trading212");
 
     // Deleting the account removes everything.
     await store.deleteAll();
