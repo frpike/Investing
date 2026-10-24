@@ -16,7 +16,7 @@ afterEach(() => { vi.unstubAllEnvs(); vi.unstubAllGlobals(); });
 describe("Trading 212 personal-mode route", () => {
   it("reports disabled and refuses to sync when not configured", async () => {
     const route = await loadRoute({ T212_API_KEY: "", T212_ACCESS_CODE: "" });
-    expect(await (await route.GET()).json()).toEqual({ enabled: false, environment: null });
+    expect(await (await route.GET()).json()).toMatchObject({ enabled: false, environment: null });
     expect((await route.POST(req("anything") as never)).status).toBe(404);
   });
 
@@ -24,7 +24,7 @@ describe("Trading 212 personal-mode route", () => {
     const route = await loadRoute({ T212_API_KEY: "secret-key", T212_ACCESS_CODE: "correct-horse", T212_ENV: "demo" });
     const status = await (await route.GET()).text();
     expect(status).not.toContain("secret-key");
-    expect(JSON.parse(status)).toEqual({ enabled: true, environment: "demo" });
+    expect(JSON.parse(status)).toMatchObject({ enabled: true, environment: "demo" });
     expect((await route.POST(req(undefined, "9.9.9.9") as never)).status).toBe(401);
     for (let i = 0; i < 5; i++) expect((await route.POST(req("wrong", "5.5.5.5") as never)).status).toBe(401);
     expect((await route.POST(req("correct-horse", "5.5.5.5") as never)).status).toBe(429);

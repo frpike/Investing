@@ -3,7 +3,9 @@
 import type { User } from "@supabase/supabase-js";
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
+import { CODE_KEY, personalStatus, savedCode, syncTrading212, type PersonalStatus } from "@/lib/broker/client-sync";
 import { GuestStore } from "@/lib/store/guest-store";
+import { PersonalStore } from "@/lib/store/personal-store";
 import { SupabaseStore } from "@/lib/store/supabase-store";
 import { emptyData, type AppData, type Change, type Store } from "@/lib/store/types";
 import { getBrowserSupabase } from "@/lib/supabase/browser";
@@ -21,6 +23,11 @@ interface AppState {
   deleteAll: () => Promise<void>;
   signOut: () => Promise<void>;
   accountsEnabled: boolean;
+  /** Where progress is kept: this browser, a file on this computer (personal mode), or a cloud account. */
+  storage: "browser" | "computer" | "account";
+  personal: PersonalStatus | null;
+  /** Personal mode: check the access code, then keep progress in the file on this computer. */
+  connectPersonal: (code: string) => Promise<{ ok: boolean; error?: string }>;
 }
 
 const Ctx = createContext<AppState | null>(null);
@@ -30,6 +37,9 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
   const [ready, setReady] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [mode, setMode] = useState<"guest" | "account">("guest");
+  const [storage, setStorage] = useState<AppState["storage"]>("browser");
+  const [personal, setPersonal] = useState<PersonalStatus | null>(null);
+  const autoSynced = useRef(false);
   const storeRef = useRef<Store>(new GuestStore());
   const dataRef = useRef<AppData>(data);
   const queue = useRef<Promise<void>>(Promise.resolve());
@@ -64,8 +74,35 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     }
     storeRef.current = store;
     setMode(store.kind);
+    setStorage(store.kind === "account" ? "account" : "browser");
     setReady(true);
+    // Personal mode: if this browser remembers the access code, switch to the file on this computer.
+    if (store.kind !== "account") {
+      const status = await personalStatus();
+      setPersonal(status);
+      const code = savedCode();
+      if (status.fileStorage && code) await switchToPersonalStore(code, true);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [supabase]);
+
+  /** Loads the computer's saved copy (or uploads this browser's progress if there isn't one yet). */
+  async function switchToPersonalStore(code: string, quiet: boolean): Promise<{ ok: boolean; error?: string }> {
+    const store = new PersonalStore(code);
+    try {
+      const remote = await store.fetchRemote();
+      const current = dataRef.current;
+      const hasProgress = (d: AppData) => !!(d.onboardedAt || d.attempts.length || d.portfolio?.holdings.length);
+      if (remote && hasProgress(remote)) commit(remote);
+      else if (hasProgress(current)) await store.save(current);
+      storeRef.current = store;
+      setStorage("computer");
+      return { ok: true };
+    } catch (e) {
+      if (!quiet) return { ok: false, error: (e as Error).message };
+      return { ok: false };
+    }
+  }
 
   useEffect(() => {
     if (!supabase) { void Promise.resolve().then(() => loadFor(null)); return; }
@@ -94,6 +131,19 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     return next;
   }, []);
 
+  // Personal mode: refresh from Trading 212 when the app opens, if the last sync is over 15 minutes old.
+  useEffect(() => {
+    if (!ready || autoSynced.current || !personal?.enabled) return;
+    const code = savedCode();
+    const last = data.snapshots.at(-1);
+    if (!code || (last && Date.now() - Date.parse(last.takenAt) < 15 * 60_000)) return;
+    autoSynced.current = true;
+    void syncTrading212(code, apply).then((r) => {
+      if (r.ok) toast.success(`Updated from Trading 212: ${r.count} holding${r.count === 1 ? "" : "s"}.`);
+      else if (r.status === 401) { try { localStorage.removeItem(CODE_KEY); } catch { /* ignore */ } }
+    });
+  }, [ready, personal, data.snapshots, apply]);
+
   const value = useMemo<AppState>(() => ({
     ready, data, user,
     mode,
@@ -106,7 +156,11 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     },
     signOut: async () => { await supabase?.auth.signOut(); },
     accountsEnabled: !!supabase,
-  }), [ready, data, user, mode, apply, supabase]);
+    storage,
+    personal,
+    connectPersonal: (code: string) => switchToPersonalStore(code, false),
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }), [ready, data, user, mode, apply, supabase, storage, personal]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

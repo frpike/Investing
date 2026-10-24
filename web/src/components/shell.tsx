@@ -19,7 +19,7 @@ const NAV = [
 
 export function Shell({ children }: { children: React.ReactNode }) {
   const path = usePathname();
-  const { mode, accountsEnabled, user } = useApp();
+  const { mode, accountsEnabled, user, storage } = useApp();
   return (
     <div className="flex min-h-full flex-col">
       <header className="sticky top-0 z-20 border-b bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-background/75">
@@ -38,7 +38,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
           <div className="ml-auto flex items-center gap-2">
             {mode === "guest" ? (
               <>
-                <Badge variant="outline" title="Your progress is saved in this browser only">Guest</Badge>
+                <Badge variant="outline" title={storage === "computer" ? "Your progress is saved in a file on this computer" : "Your progress is saved in this browser only"}>{storage === "computer" ? "Saved on this computer" : "Guest"}</Badge>
                 {accountsEnabled && <Button asChild size="sm" variant="outline"><Link href="/sign-in">Save progress</Link></Button>}
               </>
             ) : (

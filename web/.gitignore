@@ -43,3 +43,7 @@ next-env.d.ts
 # test output
 /test-results/
 /playwright-report/
+
+# personal-mode progress file (your own data)
+/.data/
+/e2e/.tmp/

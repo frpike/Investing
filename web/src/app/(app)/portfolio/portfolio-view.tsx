@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronDown, FlaskConical, MessageCircle, Pencil, Trash2 } from "lucide-react";
+import { ChevronDown, FlaskConical, LineChart as LineChartIcon, MessageCircle, Pencil, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { useApp } from "@/components/app-state";
@@ -89,7 +89,8 @@ export function PortfolioView() {
             {mode === "guest" && " Saved in this browser only."}
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
+          <Button asChild variant="outline"><Link href="/portfolio/forecast"><LineChartIcon />Projections and what-ifs</Link></Button>
           <Button asChild variant="outline"><Link href="/portfolio/sandbox"><FlaskConical />What-if sandbox</Link></Button>
           <Button onClick={() => setEditing("new")}>Add holding</Button>
         </div>

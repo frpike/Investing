@@ -22,6 +22,8 @@ export interface SnapshotEntry {
   invested: number | null;
   cash: number | null;
   historyComplete: boolean;
+  /** Value of each holding at sync time (base currency); null when unknown. */
+  holdings?: { key: string; name: string; value: number | null }[];
 }
 
 export interface AppData {

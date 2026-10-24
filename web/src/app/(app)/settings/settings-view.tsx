@@ -13,7 +13,7 @@ import { date } from "@/lib/format";
 import { setPrefs } from "@/lib/store/actions";
 
 export function SettingsView() {
-  const { data, ready, mode, user, apply, exportAll, deleteAll, signOut, accountsEnabled } = useApp();
+  const { data, ready, mode, user, apply, exportAll, deleteAll, signOut, accountsEnabled, storage } = useApp();
   const router = useRouter();
   const [name, setName] = useState<string | null>(null);
   const [confirm, setConfirm] = useState("");
@@ -39,7 +39,7 @@ export function SettingsView() {
 
       <Card>
         <CardHeader><CardTitle className="text-lg">Account</CardTitle>
-          <CardDescription>{mode === "account" ? `Signed in as ${user?.email ?? "you"}. Progress is saved to your account.` : "Guest mode: progress is saved in this browser only."}</CardDescription>
+          <CardDescription>{mode === "account" ? `Signed in as ${user?.email ?? "you"}. Progress is saved to your account.` : storage === "computer" ? "Personal mode: progress is saved in a file on this computer (web/.data/groundwork.json) and in this browser." : "Guest mode: progress is saved in this browser only."}</CardDescription>
         </CardHeader>
         <CardContent className="flex flex-wrap gap-2">
           {mode === "account" ? <Button variant="outline" onClick={signOut}>Sign out</Button>

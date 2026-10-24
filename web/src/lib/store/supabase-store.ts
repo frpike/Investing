@@ -131,6 +131,7 @@ export class SupabaseStore implements Store {
         id: r.id as string, takenAt: r.taken_at as string, source: "api_trading212" as const,
         environment: (d.environment as "live" | "demo") ?? "live", totalValue: num(r.total_value_base), invested: num(r.invested_base),
         cash: num(d.cash), historyComplete: Boolean(d.historyComplete),
+        holdings: Array.isArray(d.holdings) ? (d.holdings as { key: string; name: string; value: number | null }[]) : undefined,
       };
     });
     return data;
@@ -162,7 +163,7 @@ export class SupabaseStore implements Store {
         const s = change.snapshot;
         must(await this.db.from("portfolio_snapshots").insert({
           id: s.id, user_id: uid, portfolio_id: next.portfolio!.id, taken_at: s.takenAt, total_value_base: s.totalValue,
-          invested_base: s.invested, source_id: "api_trading212", detail: { environment: s.environment, cash: s.cash, historyComplete: s.historyComplete },
+          invested_base: s.invested, source_id: "api_trading212", detail: { environment: s.environment, cash: s.cash, historyComplete: s.historyComplete, holdings: s.holdings ?? [] },
         }));
         return;
       }

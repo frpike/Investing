@@ -53,6 +53,20 @@ connection to other people needs their written consent.
 3. Open Portfolio, enter your access code and press **Sync now**. Holdings, prices at sync time,
    costs, deposits, interest and dividends come in; each sync saves a dated snapshot.
 
+**Your progress is kept.** When you run the app on your own computer, personal mode also saves
+your lessons, quiz results, portfolio and sync history to `web/.data/groundwork.json` (protected
+by the access code, never committed to git), so it survives cleared browser data and works in any
+browser on that computer. The app remembers your access code on each device and re-syncs from
+Trading 212 by itself when you open it, at most every 15 minutes. Set `PERSONAL_DATA_FILE` to
+store the file elsewhere, or `off` to disable it. On Vercel there's no permanent disk, so use a
+Supabase account to keep progress there.
+
+**Tracking, projections and what-ifs** (Portfolio → Projections and what-ifs): a history chart from
+your syncs, a simulated range of outcomes (10th–90th percentile) based on editable return and
+volatility assumptions, and a tool to test a purchase (new money or selling part of a holding)
+and compare concentration, currency exposure, volatility and the projected range before and after.
+These are illustrations, not forecasts or recommendations.
+
 The key never reaches the browser. The server only calls read endpoints, caches results for a
 minute to respect rate limits, and locks out an address after five wrong access codes. To
 disconnect, delete the variables and revoke the key in the Trading 212 app.

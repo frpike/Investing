@@ -1,7 +1,7 @@
 "use client";
 
 import { RefreshCw } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 import { useApp } from "@/components/app-state";
 import { InfoNote } from "@/components/notes";
@@ -10,47 +10,30 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { gbp, newId } from "@/lib/format";
-import { applyBrokerSync, ensurePortfolio } from "@/lib/store/actions";
-
-const CODE_KEY = "groundwork:t212-access-code";
-type Status = { enabled: boolean; environment: "live" | "demo" | null } | null;
+import { CODE_KEY, savedCode, syncTrading212 } from "@/lib/broker/client-sync";
+import { gbp } from "@/lib/format";
 
 /** Personal-mode Trading 212 sync. Only appears when the deployment owner has switched it on. */
 export function Trading212Sync({ compact = false }: { compact?: boolean }) {
-  const { data, apply } = useApp();
-  const [status, setStatus] = useState<Status>(null);
-  const [code, setCode] = useState(() => { try { return localStorage.getItem(CODE_KEY) ?? ""; } catch { return ""; } });
+  const { data, apply, personal: status, storage, connectPersonal } = useApp();
+  const [code, setCode] = useState(savedCode);
   const [remember, setRemember] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const last = data.snapshots.at(-1);
 
-  useEffect(() => {
-    let live = true;
-    fetch("/api/broker/trading212").then((r) => r.json()).then((s) => { if (live) setStatus(s); }).catch(() => { if (live) setStatus({ enabled: false, environment: null }); });
-    return () => { live = false; };
-  }, []);
-
   async function sync() {
     setBusy(true); setError(null);
     try {
-      const res = await fetch("/api/broker/trading212", { method: "POST", headers: { "x-access-code": code } });
-      const body = await res.json();
-      if (!res.ok) { setError(body.error ?? "Sync failed."); return; }
+      const r = await syncTrading212(code, apply);
+      if (!r.ok) { setError(r.error); return; }
       try { if (remember) localStorage.setItem(CODE_KEY, code); else localStorage.removeItem(CODE_KEY); } catch { /* storage blocked */ }
-      const s = body.snapshot;
-      const portfolioId = ensurePortfolio(data, newId(), new Date()).id;
-      await apply((d) => applyBrokerSync(d, {
-        holdings: s.holdings,
-        transactions: s.transactions,
-        snapshot: {
-          takenAt: s.fetchedAt, source: "api_trading212", environment: s.environment, totalValue: s.account.totalValue,
-          invested: s.account.investedCost, cash: s.account.cash, historyComplete: s.historyComplete,
-        },
-      }, portfolioId, newId, new Date()));
-      toast.success(`Synced ${s.holdings.length} holding${s.holdings.length === 1 ? "" : "s"} from Trading 212${body.cached ? " (from the last minute)" : ""}.`);
-      if (!s.historyComplete) toast.message("Only your most recent transactions were fetched. Import a CSV export for full history.");
+      if (status?.fileStorage && storage === "browser") {
+        const c = await connectPersonal(code);
+        if (c.ok) toast.success("Your progress is now also saved on this computer.");
+      }
+      toast.success(`Synced ${r.count} holding${r.count === 1 ? "" : "s"} from Trading 212${r.cached ? " (from the last minute)" : ""}.`);
+      if (!r.historyComplete) toast.message("Only your most recent transactions were fetched. Import a CSV export for full history.");
     } catch {
       setError("Couldn't reach the server. Try again.");
     } finally {
@@ -74,10 +57,11 @@ export function Trading212Sync({ compact = false }: { compact?: boolean }) {
           <CardTitle className="text-lg">Trading 212</CardTitle>
           <Badge variant={status.environment === "demo" ? "outline" : "secondary"}>{status.environment === "demo" ? "Demo account" : "Live account"}</Badge>
           <Badge variant="outline">Read-only · personal mode</Badge>
+          {storage === "computer" && <Badge variant="outline">Progress saved on this computer</Badge>}
         </div>
         <CardDescription>
           {last ? <>Last synced {new Date(last.takenAt).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" })}. Trading 212 reported a total of {gbp(last.totalValue)}, including {gbp(last.cash)} cash.</> : "Not synced yet."}
-          {" "}Prices come from Trading 212 at the moment you sync and may be delayed; they don&apos;t update on their own.
+          {" "}It syncs by itself when you open the app (at most every 15 minutes). Prices are Trading 212&apos;s at that moment and may be delayed.
         </CardDescription>
       </CardHeader>
       <CardContent>
