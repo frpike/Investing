@@ -2,6 +2,7 @@ import { ArrowLeft, ArrowRight, MessageCircle } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
 import { getLesson, LESSONS } from "@/content";
 import { BlockView } from "@/components/learn/block-view";
 import { QuizRunner } from "@/components/learn/quiz-runner";
@@ -19,7 +20,17 @@ export async function generateMetadata({ params }: PageProps<"/learn/[lessonId]"
   return { title: getLesson(lessonId)?.lesson.title ?? "Lesson" };
 }
 
-export default async function LessonPage({ params }: PageProps<"/learn/[lessonId]">) {
+// The lesson id comes from the URL, so it's read inside Suspense; the shared page shell
+// stays instant and the (prerendered) lesson streams in.
+export default function LessonPage({ params }: PageProps<"/learn/[lessonId]">) {
+  return (
+    <Suspense fallback={<p className="mx-auto max-w-3xl text-muted-foreground">Loading lesson…</p>}>
+      <Lesson params={params} />
+    </Suspense>
+  );
+}
+
+async function Lesson({ params }: { params: PageProps<"/learn/[lessonId]">["params"] }) {
   const { lessonId } = await params;
   const ref = getLesson(lessonId);
   if (!ref) notFound();

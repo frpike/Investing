@@ -21,7 +21,7 @@ test("a new learner onboards, gets a plan and completes a lesson", async ({ page
   await page.getByRole("button", { name: "Go to my dashboard" }).click();
 
   await expect(page.getByRole("heading", { name: /, Sam$/ })).toBeVisible();
-  await expect(page.getByText("What investing is, and why people do it")).toBeVisible();
+  await expect(page.locator("[data-slot=card]").filter({ hasText: "Next lesson" }).getByText("What investing is, and why people do it")).toBeVisible();
   await page.getByRole("link", { name: /Start lesson/ }).click();
 
   await expect(page.getByRole("heading", { level: 1, name: "What investing is, and why people do it" })).toBeVisible();
