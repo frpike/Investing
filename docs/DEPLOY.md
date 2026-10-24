@@ -17,7 +17,7 @@ website), and a few **settings** that connect them.
    minute or two for it to finish.
 3. In the left menu open **SQL Editor** → **New query**.
 4. In another tab, open this file on GitHub and copy all of it:
-   `frpike/Investing` → branch `claude/groundwork-mvp` → `web/supabase/migrations/20261017000000_init.sql`
+   `frpike/Investing` → `web/supabase/migrations/20261017000000_init.sql`
    (click **Raw** to see plain text, then select all and copy).
    Paste it into the SQL Editor and click **Run**. You should see "Success. No rows returned".
 5. Click **New query** again and do the same with
@@ -49,8 +49,8 @@ website), and a few **settings** that connect them.
    learns your access code.
 5. Click **Deploy**. When it finishes, copy your site address (like
    `https://investing-abc123.vercel.app`).
-6. Under **Settings → Git → Production Branch**, set `claude/groundwork-mvp` (or ask Claude to
-   merge it into `main`). Redeploy if Vercel built from a different branch.
+6. Vercel builds from the `main` branch, which has the app. If you see an old page or a build
+   error about a missing `web` folder, check **Settings → Git → Production Branch** is `main`.
 
 ## 3. Connect sign-in to your site (Supabase)
 
