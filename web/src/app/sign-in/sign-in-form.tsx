@@ -66,6 +66,9 @@ function friendly(message: string) {
   if (/load failed|failed to fetch|networkerror|fetch failed/i.test(message)) {
     return "Couldn't reach the sign-in service. If you run this site, check NEXT_PUBLIC_SUPABASE_URL is your Supabase Project URL (https://<project>.supabase.co, nothing after it), then redeploy.";
   }
+  if (/invalid api key/i.test(message)) {
+    return "The sign-in service rejected this site's key. If you run this site, set NEXT_PUBLIC_SUPABASE_ANON_KEY to your Supabase publishable key (sb_publishable_…) or legacy anon public key, then redeploy.";
+  }
   if (/rate limit|too many/i.test(message)) return "Too many sign-in emails were requested. Wait a few minutes and try again.";
   return message;
 }
