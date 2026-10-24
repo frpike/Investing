@@ -24,11 +24,12 @@ export async function POST(req: NextRequest) {
   const denied = checkAccess(req, cfg.accessCode);
   if (denied) return denied;
   // Optional second lock for internet-facing deployments: only the owner's signed-in account may sync.
-  const owner = process.env.OWNER_EMAIL?.trim().toLowerCase();
+  const owner = process.env.OWNER_EMAIL?.trim().replace(/^["']|["']$/g, "").trim().toLowerCase();
   if (owner) {
     const supabase = await getServerSupabase();
     const email = supabase ? (await supabase.auth.getUser()).data.user?.email?.toLowerCase() : undefined;
-    if (email !== owner) return json(403, { error: "Sign in with the owner's account to sync Trading 212." });
+    if (!email) return json(403, { error: "Sign in with the owner's account to sync Trading 212. (This site address doesn't see you as signed in; sign in again here.)" });
+    if (email !== owner) return json(403, { error: `You're signed in as ${email}, which doesn't match OWNER_EMAIL for this site. Check OWNER_EMAIL in Vercel and redeploy.` });
   }
 
   if (cache && Date.now() - cache.at < CACHE_MS) return json(200, { snapshot: cache.snapshot, cached: true });

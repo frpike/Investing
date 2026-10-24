@@ -60,7 +60,18 @@ describe("owner-only lock", () => {
     const route = await loadRoute({ T212_API_KEY: "k", T212_ACCESS_CODE: "correct-horse", OWNER_EMAIL: "Owner@Example.test" });
     const res = await route.POST(req("correct-horse", "7.7.7.7") as never);
     expect(res.status).toBe(403);
-    expect((await res.json()).error).toMatch(/owner's account/);
+    expect((await res.json()).error).toMatch(/signed in as someone\.else@example\.test, which doesn't match OWNER_EMAIL/);
+    vi.doUnmock("@/lib/supabase/server");
+  });
+
+  it("says so when the server can't see a signed-in user", async () => {
+    vi.doMock("@/lib/supabase/server", () => ({
+      getServerSupabase: async () => ({ auth: { getUser: async () => ({ data: { user: null } }) } }),
+    }));
+    const route = await loadRoute({ T212_API_KEY: "k", T212_ACCESS_CODE: "correct-horse", OWNER_EMAIL: "owner@example.test" });
+    const res = await route.POST(req("correct-horse", "6.6.6.6") as never);
+    expect(res.status).toBe(403);
+    expect((await res.json()).error).toMatch(/owner's account.*doesn't see you as signed in/);
     vi.doUnmock("@/lib/supabase/server");
   });
 
@@ -68,7 +79,7 @@ describe("owner-only lock", () => {
     vi.doMock("@/lib/supabase/server", () => ({
       getServerSupabase: async () => ({ auth: { getUser: async () => ({ data: { user: { email: "owner@example.test" } } }) } }),
     }));
-    const route = await loadRoute({ T212_API_KEY: "k", T212_ACCESS_CODE: "correct-horse", OWNER_EMAIL: "Owner@Example.test", T212_BASE_URL: "https://t212.test" });
+    const route = await loadRoute({ T212_API_KEY: "k", T212_ACCESS_CODE: "correct-horse", OWNER_EMAIL: ' "Owner@Example.test" ', T212_BASE_URL: "https://t212.test" });
     let tx = 0;
     vi.stubGlobal("fetch", vi.fn(async (url: string) => {
       const p = url.replace("https://t212.test", "");
