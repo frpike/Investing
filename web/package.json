@@ -11,7 +11,8 @@
     "test:db": "./scripts/db-test.sh",
     "test:e2e": "next build && playwright test",
     "typecheck": "next typegen && tsc --noEmit",
-    "content:sync": "tsx scripts/sync-content.mts"
+    "content:sync": "tsx scripts/sync-content.mts",
+    "content:sql": "tsx scripts/content-sql.mts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.135.0",

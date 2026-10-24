@@ -1,6 +1,7 @@
 import type { NextRequest } from "next/server";
 import { fetchSnapshot, personalModeConfig, T212Error, type T212Snapshot } from "@/lib/broker/trading212";
 import { checkAccess, personalAccessCode, personalDataFile } from "@/lib/broker/personal-auth";
+import { getServerSupabase } from "@/lib/supabase/server";
 
 // Personal-mode Trading 212 sync. GET reports what's switched on (no secrets);
 // POST returns a read-only snapshot, only with the owner's access code.
@@ -22,6 +23,13 @@ export async function POST(req: NextRequest) {
 
   const denied = checkAccess(req, cfg.accessCode);
   if (denied) return denied;
+  // Optional second lock for internet-facing deployments: only the owner's signed-in account may sync.
+  const owner = process.env.OWNER_EMAIL?.trim().toLowerCase();
+  if (owner) {
+    const supabase = await getServerSupabase();
+    const email = supabase ? (await supabase.auth.getUser()).data.user?.email?.toLowerCase() : undefined;
+    if (email !== owner) return json(403, { error: "Sign in with the owner's account to sync Trading 212." });
+  }
 
   if (cache && Date.now() - cache.at < CACHE_MS) return json(200, { snapshot: cache.snapshot, cached: true });
   try {

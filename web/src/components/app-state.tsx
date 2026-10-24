@@ -5,6 +5,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import { toast } from "sonner";
 import { CODE_KEY, personalStatus, savedCode, syncTrading212, type PersonalStatus } from "@/lib/broker/client-sync";
 import { GuestStore } from "@/lib/store/guest-store";
+import { migrateGuest } from "@/lib/store/migrate";
 import { PersonalStore } from "@/lib/store/personal-store";
 import { SupabaseStore } from "@/lib/store/supabase-store";
 import { emptyData, type AppData, type Change, type Store } from "@/lib/store/types";
@@ -76,13 +77,12 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     setMode(store.kind);
     setStorage(store.kind === "account" ? "account" : "browser");
     setReady(true);
-    // Personal mode: if this browser remembers the access code, switch to the file on this computer.
-    if (store.kind !== "account") {
-      const status = await personalStatus();
-      setPersonal(status);
-      const code = savedCode();
-      if (status.fileStorage && code) await switchToPersonalStore(code, true);
-    }
+    // Personal mode (Trading 212 sync) works signed in or not. Without an account, if this browser
+    // remembers the access code, progress moves to the file on this computer (when available).
+    const status = await personalStatus();
+    setPersonal(status);
+    const code = savedCode();
+    if (store.kind !== "account" && status.fileStorage && code) await switchToPersonalStore(code, true);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [supabase]);
 
@@ -163,20 +163,6 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
   }), [ready, data, user, mode, apply, supabase, storage, personal]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
-}
-
-async function migrateGuest(account: SupabaseStore, guest: AppData): Promise<AppData> {
-  const empty = emptyData();
-  await account.save(guest, { type: "prefs" }, empty);
-  if (guest.diagnostic) await account.save(guest, { type: "diagnostic" }, empty);
-  for (const a of guest.attempts) {
-    const conceptIds = Object.keys(guest.concepts);
-    await account.save(guest, { type: "quiz", attempt: a, conceptIds, lessonId: a.lessonId }, { ...guest, activityDays: [] });
-  }
-  for (const id of Object.keys(guest.lessonProgress)) await account.save(guest, { type: "lessonStarted", lessonId: id }, empty);
-  if (guest.portfolio) await account.save(guest, { type: "portfolio" }, empty);
-  await account.save(guest, { type: "tutorTopics" }, { ...guest, activityDays: [] });
-  return account.load();
 }
 
 export function useApp(): AppState {

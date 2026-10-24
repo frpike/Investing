@@ -9,6 +9,7 @@ import { getLesson } from "@/content";
 import { contentRows } from "@/lib/content-sync";
 import { recordQuiz, setPrefs, upsertHolding, applyImport, applyBrokerSync } from "@/lib/store/actions";
 import { SupabaseStore } from "@/lib/store/supabase-store";
+import { migrateGuest } from "@/lib/store/migrate";
 import { emptyData } from "@/lib/store/types";
 import { importTrading212Csv } from "@/lib/portfolio/import-trading212";
 import { readFileSync } from "node:fs";
@@ -116,5 +117,27 @@ describe("SupabaseStore", () => {
     // Deleting the account removes everything.
     await store.deleteAll();
     expect(execFileSync("psql", [DB_URL, "-Atqc", `select count(*) from public.quiz_attempts where user_id = '${uid}'`], { encoding: "utf8" }).trim()).toBe("0");
+  });
+
+  it("moves guest progress, portfolio and sync history into a new account", async () => {
+    const uid = randomUUID();
+    execFileSync("psql", [DB_URL, "-qc", `insert into auth.users (id) values ('${uid}')`]);
+    let guest = emptyData();
+    [guest] = setPrefs(guest, { experience: "none" }, now, "Guest");
+    const quiz = getLesson("inflation")!.lesson.quiz;
+    [guest] = recordQuiz(guest, { lessonId: "inflation", context: "lesson", questions: quiz, answers: Object.fromEntries(quiz.map((q) => [q.id, q.correctOptionId])), confidence: 3 }, now, randomUUID());
+    [guest] = applyBrokerSync(guest, {
+      holdings: [{ id: "x", name: "Fictional Fund", ticker: "FAKEW", isin: null, assetType: null, sector: null, region: null, quantity: 1, instrumentCurrency: "GBP", avgPrice: null, costBasisBase: 90, lastPrice: 100, lastPriceAt: now.toISOString(), lastPriceSource: "api_trading212", fxRateToBase: null, source: "api_trading212" }],
+      transactions: [],
+      snapshot: { takenAt: now.toISOString(), source: "api_trading212", environment: "live", totalValue: 100, invested: 90, cash: 0, historyComplete: true, holdings: [{ key: "FAKEW", name: "Fictional Fund", value: 100 }] },
+    }, randomUUID(), randomUUID, now);
+    const store = new SupabaseStore(await client("authenticated", uid), uid);
+    const moved = await migrateGuest(store, guest);
+    expect(moved.profile.displayName).toBe("Guest");
+    expect(moved.lessonProgress.inflation.status).toBe("completed");
+    expect(moved.attempts).toHaveLength(1);
+    expect(moved.portfolio!.holdings[0].name).toBe("Fictional Fund");
+    expect(moved.snapshots).toHaveLength(1);
+    expect(moved.snapshots[0].holdings).toEqual([{ key: "FAKEW", name: "Fictional Fund", value: 100 }]);
   });
 });

@@ -51,3 +51,33 @@ describe("Trading 212 personal-mode route", () => {
     expect(fetchMock.mock.calls.length).toBe(calls);
   });
 });
+
+describe("owner-only lock", () => {
+  it("refuses to sync unless the signed-in user is the owner", async () => {
+    vi.doMock("@/lib/supabase/server", () => ({
+      getServerSupabase: async () => ({ auth: { getUser: async () => ({ data: { user: { email: "someone.else@example.test" } } }) } }),
+    }));
+    const route = await loadRoute({ T212_API_KEY: "k", T212_ACCESS_CODE: "correct-horse", OWNER_EMAIL: "Owner@Example.test" });
+    const res = await route.POST(req("correct-horse", "7.7.7.7") as never);
+    expect(res.status).toBe(403);
+    expect((await res.json()).error).toMatch(/owner's account/);
+    vi.doUnmock("@/lib/supabase/server");
+  });
+
+  it("allows the owner (email compared without case)", async () => {
+    vi.doMock("@/lib/supabase/server", () => ({
+      getServerSupabase: async () => ({ auth: { getUser: async () => ({ data: { user: { email: "owner@example.test" } } }) } }),
+    }));
+    const route = await loadRoute({ T212_API_KEY: "k", T212_ACCESS_CODE: "correct-horse", OWNER_EMAIL: "Owner@Example.test", T212_BASE_URL: "https://t212.test" });
+    let tx = 0;
+    vi.stubGlobal("fetch", vi.fn(async (url: string) => {
+      const p = url.replace("https://t212.test", "");
+      if (p.startsWith("/api/v0/equity/account/summary")) return Response.json(fx.summary);
+      if (p.startsWith("/api/v0/equity/positions")) return Response.json(fx.positions);
+      if (p.includes("transactions")) return Response.json(fx.transactions[tx++ % 2]);
+      return Response.json(fx.dividends[0]);
+    }));
+    expect((await route.POST(req("correct-horse", "8.8.8.8") as never)).status).toBe(200);
+    vi.doUnmock("@/lib/supabase/server");
+  });
+});

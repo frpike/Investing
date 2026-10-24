@@ -21,6 +21,9 @@ browser, the tutor explains that it isn't configured, and sign-in explains that 
 
 ## Set up Supabase (accounts and saved progress)
 
+**Non-technical walkthrough (Vercel + Supabase, phone access): [`../docs/DEPLOY.md`](../docs/DEPLOY.md).**
+Set `OWNER_EMAIL` on internet-facing deployments so only your signed-in account can sync Trading 212.
+
 1. Create a project at supabase.com (choose a UK/EU region).
 2. Apply the schema: `npx supabase link --project-ref <ref>` then `npx supabase db push`,
    or paste `supabase/migrations/*.sql` into the SQL editor.
@@ -29,8 +32,9 @@ browser, the tutor explains that it isn't configured, and sign-in explains that 
    Email (magic link) sign-in is used; configure custom SMTP before launch.
 4. Put `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` and `SUPABASE_SERVICE_ROLE_KEY`
    in `.env.local` (and in Vercel's environment settings).
-5. Load course metadata so progress can reference lessons: `npm run content:sync`
-   (re-run whenever `src/content` changes).
+5. Load course metadata so progress can reference lessons: run
+   `supabase/migrations/20261024000000_course_content.sql` (or `npm run content:sync` with the service
+   role key). After editing `src/content`, regenerate that file with `npm run content:sql`.
 
 ## Set up the tutor
 

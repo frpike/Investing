@@ -27,7 +27,7 @@ let alicePortfolio: string;
 
 beforeAll(async () => {
   sql(`insert into auth.users (id, email) values ('${alice}', 'alice@example.test'), ('${bob}', 'bob@example.test')`);
-  sql(`insert into public.course_modules (id, position, title, summary, content_version) values ('m1', 1, 'Module 1', 'Fictional test module', 't')`);
+  sql(`insert into public.course_modules (id, position, title, summary, content_version) values ('m-test', 99, 'Test module', 'Fictional test module', 't')`);
   A = await clientFor("authenticated", alice);
   B = await clientFor("authenticated", bob);
   anon = await clientFor("anon");
@@ -75,7 +75,7 @@ describe("row level security", () => {
   });
 
   it("lets anyone read course content but not user data", async () => {
-    expect((await anon.from("course_modules").select("id")).data).toEqual([{ id: "m1" }]);
+    expect((await anon.from("course_modules").select("id")).data).toContainEqual({ id: "m-test" });
     const p = await anon.from("portfolios").select("*");
     expect(p.data ?? []).toEqual([]);
   });
