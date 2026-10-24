@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { getBrowserSupabase } from "@/lib/supabase/browser";
+import { supabaseUrlLooksWrong } from "@/lib/supabase/config";
 
 export function SignInForm() {
   const supabase = getBrowserSupabase();
@@ -28,8 +29,12 @@ export function SignInForm() {
     e.preventDefault();
     if (!/^\S+@\S+\.\S+$/.test(email)) { setState("error"); setMessage("Enter a valid email address."); return; }
     setState("sending");
-    const { error } = await supabase!.auth.signInWithOtp({ email, options: { emailRedirectTo: `${location.origin}/auth/callback` } });
-    if (error) { setState("error"); setMessage(error.message); } else setState("sent");
+    try {
+      const { error } = await supabase!.auth.signInWithOtp({ email, options: { emailRedirectTo: `${location.origin}/auth/callback` } });
+      if (error) { setState("error"); setMessage(friendly(error.message)); } else setState("sent");
+    } catch (e) {
+      setState("error"); setMessage(friendly((e as Error).message));
+    }
   }
 
   return (
@@ -39,6 +44,7 @@ export function SignInForm() {
         <CardDescription>We&apos;ll email you a link; no password needed. Anything you&apos;ve done as a guest in this browser moves into your account.</CardDescription>
       </CardHeader>
       <CardContent>
+        {supabaseUrlLooksWrong() && <p className="mb-4 text-sm text-loss" role="alert">Setup problem: NEXT_PUBLIC_SUPABASE_URL should be just your Supabase Project URL, like https://abcd.supabase.co, with nothing after it. Fix it in Vercel and redeploy.</p>}
         {state === "sent" ? (
           <p>Check your inbox for a sign-in link sent to <strong>{email}</strong>. You can close this tab.</p>
         ) : (
@@ -53,4 +59,13 @@ export function SignInForm() {
       </CardContent>
     </Card>
   );
+}
+
+/** Turns network-level failures into something the site owner can act on. */
+function friendly(message: string) {
+  if (/load failed|failed to fetch|networkerror|fetch failed/i.test(message)) {
+    return "Couldn't reach the sign-in service. If you run this site, check NEXT_PUBLIC_SUPABASE_URL is your Supabase Project URL (https://<project>.supabase.co, nothing after it), then redeploy.";
+  }
+  if (/rate limit|too many/i.test(message)) return "Too many sign-in emails were requested. Wait a few minutes and try again.";
+  return message;
 }
