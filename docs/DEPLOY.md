@@ -60,6 +60,18 @@ website), and a few **settings** that connect them.
    If you also want to sign in from the copy on your computer, add
    `http://localhost:3000/auth/callback` too.
 4. Click **Save**.
+5. Make sign-in work on phones. Phone email apps often open links in their own browser, which
+   breaks the standard link. Open **Authentication → Emails** (or **Email Templates**), choose
+   **Magic Link**, replace the message body with the following, and click **Save**:
+   ```html
+   <h2>Your Groundwork sign-in code</h2>
+   <p>Type this code on the sign-in page:</p>
+   <p style="font-size:28px;font-weight:bold;letter-spacing:4px">{{ .Token }}</p>
+   <p>Or <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=email">tap here to sign in</a>.</p>
+   <p>If you didn't ask for this, ignore this email.</p>
+   ```
+   Do the same for **Confirm signup**, but with `type=signup` in the link. The code works
+   whichever app opens the email, and the link works in any browser.
 
 ## 4. Sign in and bring your progress across
 

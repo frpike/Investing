@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,9 +13,13 @@ import { supabaseUrlLooksWrong } from "@/lib/supabase/config";
 export function SignInForm() {
   const supabase = getBrowserSupabase();
   const params = useSearchParams();
+  const router = useRouter();
   const [email, setEmail] = useState("");
+  const [code, setCode] = useState("");
+  const [verifying, setVerifying] = useState(false);
+  const [codeError, setCodeError] = useState("");
   const [state, setState] = useState<"idle" | "sending" | "sent" | "error">(params.get("error") ? "error" : "idle");
-  const [message, setMessage] = useState(params.get("error") ? "That sign-in link didn't work or has expired. Request a new one." : "");
+  const [message, setMessage] = useState(params.get("error") ? "That sign-in link didn't work or has expired. Request a new one, then type the code from the email here." : "");
 
   if (!supabase) {
     return (
@@ -37,22 +41,43 @@ export function SignInForm() {
     }
   }
 
+  async function verify(e: React.FormEvent) {
+    e.preventDefault();
+    const token = code.replace(/\s/g, "");
+    if (!/^\d{6,10}$/.test(token)) { setCodeError("Enter the code from the email (numbers only)."); return; }
+    setVerifying(true); setCodeError("");
+    try {
+      const { error } = await supabase!.auth.verifyOtp({ email, token, type: "email" });
+      if (error) { setCodeError(/expired|invalid/i.test(error.message) ? "That code didn't work or has expired. Check you used the newest email, or request a new code." : friendly(error.message)); setVerifying(false); }
+      else { router.push("/dashboard"); router.refresh(); }
+    } catch (e) {
+      setCodeError(friendly((e as Error).message)); setVerifying(false);
+    }
+  }
+
   return (
     <Card>
       <CardHeader>
         <CardTitle className="text-2xl">Sign in or create an account</CardTitle>
-        <CardDescription>We&apos;ll email you a link; no password needed. Anything you&apos;ve done as a guest in this browser moves into your account.</CardDescription>
+        <CardDescription>We&apos;ll email you a code and a link; no password needed. Anything you&apos;ve done as a guest in this browser moves into your account.</CardDescription>
       </CardHeader>
       <CardContent>
         {supabaseUrlLooksWrong() && <p className="mb-4 text-sm text-loss" role="alert">Setup problem: NEXT_PUBLIC_SUPABASE_URL should be just your Supabase Project URL, like https://abcd.supabase.co, with nothing after it. Fix it in Vercel and redeploy.</p>}
         {state === "sent" ? (
-          <p>Check your inbox for a sign-in link sent to <strong>{email}</strong>. You can close this tab.</p>
+          <form onSubmit={verify} className="space-y-4" noValidate>
+            <p>We&apos;ve emailed <strong>{email}</strong>. Type the code from the email here, or tap the link in it.</p>
+            <div className="grid gap-1.5"><Label htmlFor="code">Code from the email</Label>
+              <Input id="code" inputMode="numeric" autoComplete="one-time-code" value={code} onChange={(e) => setCode(e.target.value)} placeholder="123456" /></div>
+            {codeError && <p className="text-sm text-loss" role="alert">{codeError}</p>}
+            <Button type="submit" disabled={verifying} className="w-full">{verifying ? "Checking…" : "Sign in"}</Button>
+            <p className="text-center text-sm text-muted-foreground"><button type="button" className="underline" onClick={() => { setState("idle"); setCode(""); setCodeError(""); }}>Use a different email or send a new code</button></p>
+          </form>
         ) : (
           <form onSubmit={submit} className="space-y-4" noValidate>
             <div className="grid gap-1.5"><Label htmlFor="email">Email</Label>
               <Input id="email" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} required /></div>
             {state === "error" && <p className="text-sm text-loss" role="alert">{message}</p>}
-            <Button type="submit" disabled={state === "sending"} className="w-full">{state === "sending" ? "Sending…" : "Email me a sign-in link"}</Button>
+            <Button type="submit" disabled={state === "sending"} className="w-full">{state === "sending" ? "Sending…" : "Email me a sign-in code"}</Button>
             <p className="text-center text-sm text-muted-foreground"><Link href="/dashboard" className="underline">Continue as a guest</Link></p>
           </form>
         )}
